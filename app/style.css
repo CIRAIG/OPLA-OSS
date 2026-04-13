@@ -1,0 +1,1041 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
+
+* {
+    box-sizing: border-box;
+    font-family: "Source Sans 3", sans-serif;
+}
+
+html, body {
+    padding: 0;
+    margin: 0;
+    background: #f8f8f8FF;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.init-system-error {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    z-index: 10000;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background-color: rgb(255, 219, 219);
+}
+
+.init-system-error__icon {
+    width: 100px;
+}
+
+.init-system-error__error-text {
+    font-size: 20px;
+}
+
+.app {
+    display: flex;
+}
+
+.app__leftNav {
+    width: 220px;
+    height: 100vh;
+    padding: 20px;
+
+    position: fixed;
+    left: 20px;
+    top: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 50px;
+}
+
+.app__leftNav__logo {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+    font-size: 11px;
+}
+
+.app__leftNav__logo__opla {
+    width: 70%;
+    align-self: center;
+}
+
+.app__leftNav__logo__ciraig {
+    width: 35%;
+    align-self: flex-end;
+}
+
+.app__leftNav__steps {
+    background-color: white;
+    border-radius: 20px 20px 20px 20px;
+    padding: 20px;
+}
+
+.app__leftNav__steps__step {
+    margin-bottom: 20px;
+}
+
+.app__leftNav__steps__step__index {
+    text-transform: uppercase;
+    font-size: 12px;
+    color: #707070;
+}
+
+.app__leftNav__steps__step__title {
+    font-size: 16px;
+}
+
+.app__leftNav__steps__step__status {
+    font-size: 12px;
+    color: #707070;
+}
+
+.app__leftNav__steps__step__status--completed {
+    color: #5fab4c;
+}
+
+.app__leftNav__steps__ctas {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.app__leftNav__steps__version {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.app__leftNav__steps__ctas__button {
+    background-color: #FA9824;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.app__content {
+    flex: 1;
+    padding: 80px 20px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 50px;
+}
+
+.app__content__step-1 {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.app__content__step-1__field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 14px;
+}
+
+.app__content__step-1__field--switch {
+    margin-top: 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.app__content__step-1__field--switch div:first-child {
+    text-align: right;
+}
+
+.app__content__step-2 {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.app__content__step-2__materials {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.app__content__step-2__materials__comment {
+    max-width: 500px;
+    text-align: center;
+    font-size: 12px;
+}
+
+.app__content__step-2__materials__input {
+    display: flex;
+    gap: 5px;
+    font-size: 14px;
+    align-items: flex-start;
+}
+
+.app__content__step-2__materials__input__field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.app__content__step-2__materials__input__field__add-new {
+    align-self: flex-end;
+    color: #5fab4c;
+    cursor: pointer;
+}
+
+.app__content__step-2__materials__input__search {
+    align-self: center;
+}
+
+.app__content__step-2__materials__input__cta {
+    align-self: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 35px;
+    width: 35px;
+    border-radius: 100%;
+    background-color: #5fab4c;
+    color: white;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+}
+
+.app__content__step-2__materials__input__cta--remove {
+    background-color: #ff4c4c;
+}
+
+.app__content__step-2__materials__input__cta--config {
+    background-color: #FA9824;
+}
+
+.app__content__step-2__add {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+}
+
+.app__content__step-2__add__separator {
+    flex: 1;
+    height: 1px;
+    background-color: #5fab4c;
+}
+
+.app__content__step-2__add__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    width: 50px;
+    border-radius: 100%;
+    background-color: #5fab4c;
+    color: white;
+    font-size: 40px;
+    border: none;
+}
+
+.app__content__step-3 {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.app__content__step-3__methods {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.app__content__step-3__methods__comment {
+    max-width: 500px;
+    text-align: center;
+    font-size: 12px;
+}
+
+.app__content__step-3__methods__input {
+    display: flex;
+    gap: 5px;
+    font-size: 14px;
+    align-items: flex-start;
+}
+
+.app__content__step-3__methods__input__field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.app__content__step-3__methods__input__search {
+    align-self: center;
+    padding-top: 20px;
+}
+
+.app__content__step-3__methods__input__cta {
+    margin-top: 25px;
+    align-self: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 35px;
+    width: 35px;
+    border-radius: 100%;
+    background-color: #5fab4c;
+    color: white;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+}
+
+.app__content__step-3__methods__input__cta--remove {
+    background-color: #ff4c4c;
+}
+
+.app__content__step-3__methods__input__cta--config {
+    background-color: #FA9824;
+}
+
+.app__content__step-3__add {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+}
+
+.app__content__step-3__add__separator {
+    flex: 1;
+    height: 1px;
+    background-color: #5fab4c;
+}
+
+.app__content__step-3__add__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    width: 50px;
+    border-radius: 100%;
+    background-color: #5fab4c;
+    color: white;
+    font-size: 40px;
+    border: none;
+}
+
+.app__content__step-4 {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.app__content__step-4__use-default-mix {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.app__content__step-4__use-subtitution {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.app__content__step-4__methods {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+}
+
+.app__content__step-4__methods__description {
+    max-width: 500px;
+    text-align: center;
+    font-size: 12px;
+}
+
+.app__content__step-4__methods__inputs {
+    margin-top: 20px;
+    display: flex;
+    gap: 5px;
+    font-size: 14px;
+    align-items: flex-start;
+}
+
+.app__content__step-4__methods__inputs__field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.app__content__step-4__methods__inputs__search {
+    align-self: center;
+    padding-top: 20px;
+}
+
+.app__content__step-4__methods__inputs__cta {
+    margin-top: 25px;
+    align-self: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 35px;
+    width: 35px;
+    border-radius: 100%;
+    background-color: #5fab4c;
+    color: white;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+}
+
+.app__content__step-4__methods__inputs__cta--remove {
+    background-color: #ff4c4c;
+}
+
+.app__content__step-4__methods__inputs__cta--config {
+    background-color: #FA9824;
+}
+
+.app__content__step-4__add {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+}
+
+.app__content__step-4__add__separator {
+    flex: 1;
+    height: 1px;
+    background-color: #5fab4c;
+}
+
+.app__content__step-4__add__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    width: 50px;
+    border-radius: 100%;
+    background-color: #5fab4c;
+    color: white;
+    font-size: 40px;
+    border: none;
+}
+
+.app__content__step-5 {
+    margin-bottom: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    align-items: center;
+}
+
+.app__content__step-5__section-title {
+    text-align: center;
+}
+
+.app__content__step-5__table {
+    display: block;
+    border-collapse: collapse;
+    padding: 40px;
+    border-radius: 20px;
+}
+
+.app__content__step-5__table--midpoint {
+    background-color: #FEEAD3;
+}
+
+.app__content__step-5__table--endpoint {
+    background-color: #DEEBF2;
+}
+
+.app__content__step-5__table thead {
+    font-weight: bold;
+}
+
+.app__content__step-5__table td {
+    padding: 10px 20px;
+}
+
+.app__content__step-5__table td:first-child {
+    padding-right: 70px;
+}
+
+.card {
+    background-color: white;
+    border-radius: 20px 20px 20px 20px;
+    padding: 30px;
+}
+
+.nextButton {
+    background-color: #5fab4cFF;;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.nextButton--disabled {
+    background-color: grey;
+    cursor: not-allowed;
+}
+
+input, select {
+    padding: 10px;
+    border: 1px solid #DCDCDC;
+    border-radius: 5px;
+    font-size: 14px;
+    background-color: white;
+    width: 300px;
+}
+
+input[type=checkbox] {
+    min-width: inherit;
+}
+
+/***************************
+ NEW CUSTOM MATERIAL MODALE
+***************************/
+
+.modal-new-material {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-new-material__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-new-material__content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 1001;
+
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-new-material__content__actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal-new-material__content__actions__button {
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal-new-material__content__actions__button--add {
+    background-color: #5fab4cFF;
+}
+
+.modal-new-material__content__actions__button--cancel {
+    background-color: #ff4c4c;
+}
+
+.modal-new-material__content__field {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-new-material__content__energies {
+    background-color: #DEEBF2;
+    border-radius: 20px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-new-material__content__energies__energy {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 14px;
+    align-items: center;
+}
+
+.modal-new-material__content__energies__energy__inputs {
+    display: flex;
+    gap: 5px;
+    font-size: 14px;
+    align-items: flex-start;
+}
+
+.modal-new-material__content__energies__energy__inputs__field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.modal-new-material__content__energies__energy__inputs__search {
+    align-self: center;
+    padding-top: 20px;
+}
+
+.modal-new-material__content__energies__energy__inputs__cta {
+    margin-top: 25px;
+    align-self: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 35px;
+    width: 35px;
+    border-radius: 100%;
+    background-color: #5fab4c;
+    color: white;
+    font-size: 20px;
+    border: none;
+    cursor: pointer;
+}
+
+.modal-new-material__content__energies__energy__inputs__cta--remove {
+    background-color: #ff4c4c;
+}
+
+.modal-new-material__content__energies__energy__inputs__cta--config {
+    background-color: #FA9824;
+}
+
+.modal-new-material__content__energies__add {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+}
+
+.modal-new-material__content__energies__add__separator {
+    flex: 1;
+    height: 1px;
+    background-color: #5fab4c;
+}
+
+.modal-new-material__content__energies__add__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    width: 50px;
+    border-radius: 100%;
+    background-color: #5fab4c;
+    color: white;
+    font-size: 40px;
+    border: none;
+}
+
+/********************************************
+ MATERIAL COMPOSITION PARAMETRIZATION MODALE
+********************************************/
+
+.modal-material-params {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-material-params__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-material-params__content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 1001;
+
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-material-params__content__reset-button {
+    background-color: #CDD5EB;
+    color: #3E4759;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.modal-material-params__content__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.modal-material-params__content__actions__button {
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal-material-params__content__field {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-material-params__content__field__title {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.tooltip {
+    font-size: 12px;
+}
+
+/***************************************
+ PROCESSS METHOD PARAMETRIZATION MODALE
+***************************************/
+
+.modal-process-params {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-process-params__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-process-params__content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 1001;
+
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-process-params__content__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.modal-process-params__content__actions__button {
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal-process-params__content__field {
+    display: flex;
+    flex-direction: column;
+}
+
+/***************************
+ EOL PARAMETRIZATION MODALE
+***************************/
+
+.modal-eol-params {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-eol-params__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-eol-params__content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 1001;
+
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-eol-params__content__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.modal-eol-params__content__actions__button {
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal-eol-params__content__field {
+    display: flex;
+    flex-direction: column;
+}
+
+/************************
+ SEARCH MODALE
+ ************************/
+
+.modal-searching {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-searching__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-searching__content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    z-index: 1001;
+
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-searching__content__result span {
+    cursor: pointer;
+}
+
+.modal-searching__content__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.modal-searching__content__actions__button {
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal-searching__content__field {
+    display: flex;
+    flex-direction: column;
+}
+
+.visible-only-on-print {
+    display: none;
+}
+
+@media print {
+    .visible-only-on-print {
+        display: block;
+    }
+
+    .app__leftNav {
+        display: none;
+    }
+
+    .app__content {
+        padding: 20px;
+    }
+
+    .app__content__step-1,
+    .app__content__step-2,
+    .app__content__step-3,
+    .app__content__step-4 {
+        display: none;
+    }
+
+    .app__content__step-5__actions {
+        display: none;
+    }
+
+    .app__content__step-5__section-title {
+        display: none;
+    }
+
+    .app__content__step-5__table td {
+        padding: 0;
+        margin: 0;
+    }
+
+    table {
+        width: 100%;
+        max-width: 100%;
+        border-collapse: collapse;
+        white-space: nowrap;
+    }
+}
+
+/**************
+ Toggle Switch
+**************/
+
+.switch {
+position: relative;
+display: inline-block;
+width: 60px;
+height: 34px;
+}
+
+.switch input { 
+opacity: 0;
+width: 0;
+height: 0;
+}
+
+.switch__slider {
+position: absolute;
+cursor: pointer;
+top: 0;
+left: 0;
+right: 0;
+bottom: 0;
+background-color: #ccc;
+-webkit-transition: .4s;
+transition: .4s;
+}
+
+.switch__slider:before {
+position: absolute;
+content: "";
+height: 26px;
+width: 26px;
+left: 4px;
+bottom: 4px;
+background-color: white;
+-webkit-transition: .4s;
+transition: .4s;
+}
+
+input:checked + .switch__slider {
+background-color: #2196F3;
+}
+
+input:focus + .switch__slider {
+box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .switch__slider:before {
+-webkit-transform: translateX(26px);
+-ms-transform: translateX(26px);
+transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.switch__slider.round {
+border-radius: 34px;
+}
+
+.switch__slider.round:before {
+border-radius: 50%;
+}

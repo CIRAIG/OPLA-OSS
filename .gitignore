@@ -1,0 +1,9 @@
+export-adapter/venv/
+export-adapter/outputs/
+export-adapter/inputs/*
+!export-adapter/inputs/.gitkeep
+
+dist/
+
+# Overwrite is a folder that could contain proprietary data, so we ignore it by default. 
+overwrite/
