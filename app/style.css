@@ -68,7 +68,7 @@ html, body {
 }
 
 .app__leftNav__logo__opla {
-    width: 70%;
+    width: 50%;
     align-self: center;
 }
 
@@ -736,6 +736,11 @@ input[type=checkbox] {
     border: none;
     border-radius: 5px;
     cursor: pointer;
+}
+
+.modal-material-params__content__category-name {
+    font-size: 18px;
+    font-weight: bold;
 }
 
 .modal-material-params__content__field {

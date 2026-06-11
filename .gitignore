@@ -7,3 +7,6 @@ dist/
 
 # Overwrite is a folder that could contain proprietary data, so we ignore it by default. 
 overwrite/
+
+transcription/
+harmozined/

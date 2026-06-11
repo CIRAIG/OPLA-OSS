@@ -1,6 +1,8 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('global', () => ({
 
+        isImporting: false,
+
         init() {
             this.resetNewMaterial();
             this.loadData();
@@ -24,6 +26,10 @@ document.addEventListener('alpine:init', () => {
             });
 
             this.$watch('eol_approachSelected', () => {
+                if (this.isImporting) {
+                    return;
+                }
+
                 this.$nextTick(async () => {
                     await this.loadMaterial();
                     await this.loadEols();
@@ -283,41 +289,41 @@ document.addEventListener('alpine:init', () => {
             {
                 id: 'composition',
                 title: 'Composition',
-                customValidation(component) {
-                    if (component.composition_materials?.some(material => material.type === '' || material.mass === '')) {
-                        return false;
-                    }
+                // customValidation(component) {
+                //     if (component.composition_materials?.some(material => material.type === '' || material.mass === '')) {
+                //         return false;
+                //     }
 
-                    if (component.composition_materials?.length === 0) {
-                        return false;
-                    }
-                }
+                //     if (component.composition_materials?.length === 0) {
+                //         return false;
+                //     }
+                // }
             },
             {
                 id: 'processing',
                 title: 'Process method',
-                customValidation(component) {
-                    if (component.processing_methods?.some(process => process.type === '' || process.mass === '')) {
-                        return false;
-                    }
+                // customValidation(component) {
+                //     if (component.processing_methods?.some(process => process.type === '' || process.mass === '')) {
+                //         return false;
+                //     }
 
-                    if (component.processing_methods?.length === 0) {
-                        return false;
-                    }
-                }
+                //     if (component.processing_methods?.length === 0) {
+                //         return false;
+                //     }
+                // }
             }, 
             {
                 id: 'eol',
                 title: 'End of Life Scenario',
-                customValidation(component) {
-                    if (component.eol_methods?.some(method => method.type === '' || method.mass === '')) {
-                        return false;
-                    }
+                // customValidation(component) {
+                //     if (component.eol_methods?.some(method => method.type === '' || method.mass === '')) {
+                //         return false;
+                //     }
 
-                    if (component.eol_methods?.length === 0) {
-                        return false;
-                    }
-                }
+                //     if (component.eol_methods?.length === 0) {
+                //         return false;
+                //     }
+                // }
             },
             {
                 id: 'results',
@@ -414,7 +420,7 @@ document.addEventListener('alpine:init', () => {
 
                 const newItem = {
                     name: material['name'],
-                    id: material['name'],
+                    id: `material-${material['name']}`,
                     unit: material['unit'],
                     comment: material['comment'],
                     midpoints: material,
@@ -483,7 +489,7 @@ document.addEventListener('alpine:init', () => {
 
                 const newItem = {
                     name: material['name'],
-                    id: material['name'],
+                    id: `material-${material['name']}`,
                     unit: material['unit'],
                     comment: material['comment'],
                     midpoints: material,
@@ -545,7 +551,7 @@ document.addEventListener('alpine:init', () => {
 
                 const newItem = {
                     name: process['name'],
-                    id: process['name'],
+                    id: `process-${process['name']}`,
                     unit: process['unit'],
                     comment: process['comment'],
                     midpoints: process,
@@ -579,7 +585,7 @@ document.addEventListener('alpine:init', () => {
                 const newItem = {
                     name: internal['name'],
                     original_name: internal['original_name'],
-                    id: crypto.randomUUID(),
+                    id: `internal-${internal['name']}`,
                     unit: internal['unit'],
                     comment: internal['comment'],
                     midpoints: internal,
@@ -611,7 +617,7 @@ document.addEventListener('alpine:init', () => {
 
                 const newItem = {
                     name: ingredient['name'],
-                    id: crypto.randomUUID(),
+                    id: `ingredient-${ingredient['name']}`,
                     unit: ingredient['unit'],
                     comment: ingredient['comment'],
                     midpoints: ingredient,
@@ -642,7 +648,7 @@ document.addEventListener('alpine:init', () => {
 
                 const newItem = {
                     name: process['name'],
-                    id: crypto.randomUUID(),
+                    id: `processing-${process['name']}`,
                     unit: process['unit'],
                     comment: process['comment'],
                     midpoints: process,
@@ -717,7 +723,7 @@ document.addEventListener('alpine:init', () => {
 
                 const newItem = {
                     name: energy['name'],
-                    id: crypto.randomUUID(),
+                    id: `energy-${energy['name']}`,
                     unit: energy['unit'],
                     comment: energy['comment'],
                     midpoints: energy,
@@ -748,7 +754,7 @@ document.addEventListener('alpine:init', () => {
 
                 const newItem = {
                     name: emission['name'],
-                    id: crypto.randomUUID(),
+                    id: `direct-emission-${emission['name']}`,
                     unit: emission['unit'],
                     comment: emission['comment'],
                     midpoints: emission,
@@ -779,7 +785,7 @@ document.addEventListener('alpine:init', () => {
 
                 const newItem = {
                     name: requirement['name'],
-                    id: crypto.randomUUID(),
+                    id: `other-requirement-${requirement['name']}`,
                     unit: requirement['unit'],
                     comment: requirement['comment'],
                     midpoints: requirement,
@@ -988,6 +994,15 @@ document.addEventListener('alpine:init', () => {
             return aggregatedCategorisation;
         },
 
+        getParamListForParametrizableMaterial(materialParams) {
+            const params = [];
+            for (const param of materialParams) {
+                params.push(...param.fields)
+            }
+
+            return params;
+        },
+
         getImpactOfParametrizableMaterial(materialId, categorisationType) {
             const parametrizableMaterial = this.materialsDatabase.find(mat => mat.id === materialId);
             const instanceOfComposition = this.composition_materials.find(mat => mat.type === materialId);
@@ -1001,7 +1016,7 @@ document.addEventListener('alpine:init', () => {
             // Generating the inventory based on user inputs using the 
             // InventoryGenerator class developed by Ahmeed
             const params = {};
-            for (const param of selectedParams) {
+            for (const param of this.getParamListForParametrizableMaterial(selectedParams)) {
                 if (!isNaN(param.value)) {
                     params[param.variable] = parseFloat(param.value);
                 } else {
@@ -1012,13 +1027,12 @@ document.addEventListener('alpine:init', () => {
             gen = new window[parametrizableMaterial.generatorClass]();
             gen.generate(params);
             results = gen.to_dict();
-            console.debug(`==> Generated inventory for ${parametrizableMaterial.name}:`, results);
 
             // For each result, aggregate the impact based on the material definition in the database and 
             // the impact of each parameter on the midpoints/endpoints categories
             const nonAggregatedCategorisationList = [];
 
-            // const list = [];
+            const list = [];
 
             for (resultLine of results) {
                 const inputDefinition = this.internalsDatabase.find(
@@ -1571,6 +1585,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         midPointImpactResults() {
+            if (this.isImporting) return [];
+
             const results = [];
 
             materials_midpoints = this.getImpactOfMaterials('midpoints');
@@ -1593,6 +1609,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         endPointImpactResults() {
+            if (this.isImporting) return [];
+
             const results = [];
 
             materials_endpoints = this.getImpactOfMaterials('endpoints');
@@ -1629,7 +1647,11 @@ document.addEventListener('alpine:init', () => {
         exportMidPointImpactAsCSV() {
             const rows = [
                 ["Impact Type", "Amount", "Unit"],
-                ...this.midPointImpactResults().map(result => [result.impact, result.value, result.unit])
+                ...this.midPointImpactResults().map(result => [
+                    `"${result.impact.replace(/"/g, '""')}"`, 
+                    result.value, 
+                    result.unit
+                ])
             ];
             const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
             const encodedUri = encodeURI(csvContent);
@@ -1678,7 +1700,7 @@ document.addEventListener('alpine:init', () => {
         exportMidPointImpactChartDataAsCSV() {
             const data = this.getMidPointChartData();
             const rows = [
-                ["Impact Category", ...data.categories],
+                ["Impact Category", ...data.categories.map(category => `"${category}"`)],
                 ...data.series.map(serie => [`"${serie.name}"`, ...serie.data])
             ];
             const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
@@ -1710,6 +1732,10 @@ document.addEventListener('alpine:init', () => {
         },
 
         getContributionChartData() {
+            if (this.isImporting) {
+                return { series: [], colors: [], categories: [] };
+            }
+
             const ratios = this.computeRatiosOfcontributionImpact(); 
 
             if (Object.keys(ratios).length === 0) {
@@ -1756,7 +1782,10 @@ document.addEventListener('alpine:init', () => {
         },
 
         getMidPointChartData() {
-            
+            if (this.isImporting) {
+                return { series: [], colors: [], categories: [] };
+            }
+
             const ratios = this.computeRatiosOfMidpointImpact();
 
             const series = [];
@@ -2088,6 +2117,10 @@ document.addEventListener('alpine:init', () => {
         },
 
         getEndPointChartData() {
+            if (this.isImporting) {
+                return { series: [], colors: [], categories: [] };
+            }
+
             const ratios = this.computeRatiosOfEndpointImpact();
 
             const series = [];
@@ -2368,27 +2401,30 @@ document.addEventListener('alpine:init', () => {
 
         /**
          * Save the current LCA study into a JSON file for later retrieval
-         * Basically, we take ALL the variables of the projects and just keep them in a JSON structure
          */
         save() {
-            const getCircularReplacer = () => {
-                const seen = new WeakSet();
-                return (key, value) => {
-                    if (typeof value === "object" && value !== null) {
-                        if (seen.has(value)) {
-                            return;
-                        }
-                        seen.add(value);
-                    }
-                    return value;
-                };
+            const data = {
+                goal_projectName: this.goal_projectName,
+                goal_functionalUnit: this.goal_functionalUnit,
+                goal_productionLocation: this.goal_productionLocation,
+                goal_usageLocation: this.goal_usageLocation,
+                goal_isFlexible: this.goal_isFlexible,
+        
+                composition_materials: this.composition_materials,
+                processing_methods: this.processing_methods,
+                eol_methods: this.eol_methods,
+                eol_useDefaultMix: this.eol_useDefaultMix,
+                eol_approachSelected: this.eol_approachSelected,
+        
+                customMaterialsDatabase: this.customMaterialsDatabase,
+                currentStep: this.currentStep,
             };
-
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.$data, getCircularReplacer()));
+        
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
             const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href",     dataStr);
+            downloadAnchorNode.setAttribute("href", dataStr);
             downloadAnchorNode.setAttribute("download", "lca_study.json");
-            document.body.appendChild(downloadAnchorNode); // required for firefox
+            document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
         },
@@ -2396,88 +2432,64 @@ document.addEventListener('alpine:init', () => {
         /**
          * Load an LCA study from a previously saved JSON file
          */
+        async loadImportedStudy(data) {
+            this.isImporting = true;
+        
+            try {
+                // restore only user data
+                this.goal_projectName = data.goal_projectName || '';
+                this.goal_functionalUnit = data.goal_functionalUnit || '';
+                this.goal_productionLocation = data.goal_productionLocation || '';
+                this.goal_usageLocation = data.goal_usageLocation || '';
+                this.goal_isFlexible = data.goal_isFlexible || false;
+        
+                this.customMaterialsDatabase = data.customMaterialsDatabase || [];
+                this.composition_materials = data.composition_materials || [{ type: '', mass: '' }];
+                this.processing_methods = data.processing_methods || [{ type: '', mass: '' }];
+                this.eol_methods = data.eol_methods || [{ type: '', percentage: '' }];
+                this.eol_useDefaultMix = data.eol_useDefaultMix || false;
+                this.eol_approachSelected = data.eol_approachSelected || false;
+                this.currentStep = data.currentStep || 'goal';
+        
+                // rebuild dependent datasets from source data
+                await this.loadMaterial();
+                await this.loadEols();
+        
+                // wait until Alpine has flushed updates
+                await this.$nextTick();
+        
+                // now redraw once
+                this.refreshGraphs();
+            } finally {
+                this.isImporting = false;
+            }
+        },
+        
         load() {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'application/json';
-
-            input.onchange = e => { 
-                const file = e.target.files[0]; 
-
+        
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+        
                 const reader = new FileReader();
-                reader.readAsText(file,'UTF-8');
-
-                reader.onload = readerEvent => {
-                    const content = readerEvent.target.result; // this is the content!
-                    const data = JSON.parse(content);
-
-                    // Overwrite all data properties
-                    Object.assign(this.$data, data);
-                }
-            }
-
+                reader.readAsText(file, 'UTF-8');
+        
+                reader.onload = async readerEvent => {
+                    try {
+                        const content = readerEvent.target.result;
+                        const data = JSON.parse(content);
+                        await this.loadImportedStudy(data);
+                        console.log('Data imported successfully!');
+                    } catch (error) {
+                        console.error('Import failed:', error);
+                    }
+                };
+            };
+        
             input.click();
         },
     }))
 })
-
-// [x] -> Revue unit of midpoints categories
-// [x] -> Hide default eol mix checkbox for the moment
-// [x] -> Add energy list in custom material creation
-// [x] -> Add material list in custom material creation
-// [x] -> Add emissions list in custom material creation
-// [x] -> Add other requirements list in custom material creation
-// [x] -> Add calculation logic for custom materials
-// [x] -> Add export/import project 
-// [x] -> remove `market for` and add `(market mix)` at the end
-// [x] -> Set location at the end of each name
-// [x] -> Use name in place of reference product
-// [x] -> Re-implement steps system and automatic fallback on change
-// [x] -> Make sure that graph refresh correctly on data change
-// [x] -> Add graph of contribution midpoint to endpoint
-// [x] -> Add autocomplete search
-// [x] -> Ameed "WIP" parametrized material list
-// [x] -> Franziska updated EOL list
-// [x] -> Integrate the complete energy list into the custom materials
-// [x] -> Add a "helper" on the energy map to show unit to enter
-// [x] -> Integrate the complete direct emissions list into the custom materials
-// [x] -> Add a "helper" on the direct emissions map to show unit to enter
-// [x] -> Integrate the complete other requirements list into the custom materials
-// [x] -> Add a "helper" on the other requirements map to show unit to enter
-// [x] -> Review material requirement units to make sure calculation make sense (team discussion)
-// [x] -> Hide/Remove non-necessary fields in the UI for the moment
-// [x] Goal & Scope : Add regions of Canada
-// [x] add functional unit helper on results
-// [x] -> Create a script to merge all the code into a single file for easier deployment
-// [x] -> New color templates
-// [x] -> Alphabetical order for midpoints and endpoints categorization
-// [x] -> Adding step 1 data into PDF file export
-// [x] -> [Product name] from [activity name] BUT NO FOR EoL AND Purple
-// [x] -> Add OPLA logo on top left
-// [x] -> Re-add grey-ed parametrized polymers
-// [x] -> LDPE integration
-// [x] -> HDPE integration
-// [x] -> PET integration
-// [x] -> Bio-LDPE integration
-// [x] -> Bio-HDPE integration
-// [x] -> LLDPE integration
-// [x] -> Restructure data format for purple & green
-// [x] -> Purple & Green box integration
-// [x] -> Add location filtering for parametrized materials
-// [x] -> Show comment on ALL select
-// [x] -> Include `comments` into the search
-// [x] Add susbstitution into the PDF
-// [x] Search is not working anymore
-// [x] Purple name
-// [x] Processing method name
-// [x] Market name
-// [x] Lightbulb
-// [x] Add button to refresh default param
-// [x] -> Check error download on Safari (fix it or add disclaimer if user is on Safari)
-// [x] Fix substitution graph --- ??? Seems to works IF we fill all steps accordingly
-// [x] Check input of param
-// [ ] Logo check --- ??? Works on chrome and Debian on my computer...
-// [ ] Implement PP parametrization
-// [ ] -> Generate harmonized materials from Excel file
-// [x] -> Enhance Readme to explain how to insert datasets and how to compile
-// [x] -> Prepare open source release with no private data (ie: no LCA database included)
