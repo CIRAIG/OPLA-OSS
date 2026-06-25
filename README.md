@@ -64,7 +64,7 @@ Parametrizable materials work as materials with "params", you need two things to
  - A list of params (ie: name, type, condition, default value, etc..)
  - A `.js` script that take these params in input and output a list of internal requirements from the datasets
 
-You can define new parametrizable material by overwriting the list of choice `window.PARAMETRIZABLE_MATERIALS_DATABASE` and by adding you custom scripts into the folder `./overwrite/parametrized-scripts`.
+You can define new parametrizable material by overwriting the list of choice `window.PARAMETRIZABLE_MATERIALS_DATABASE` and by adding you custom scripts into the folder `./overwrite/parametrized-scripts`. Feel free to check the `parametrized-process-modules` folder to see some available parametrized processes.
 
 ## JS Files
 
