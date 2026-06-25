@@ -1,5 +1,8 @@
 # OPLA
 
+[![DOI](https://zenodo.org/badge/1206993619.svg)](https://doi.org/10.5281/zenodo.20849881)
+
+
 This tool allows users to create easy & fast Life Cycle Assessments (LCA) based on imported datasets. Users can define materials, processes, and end-of-life (EOL) scenarios, and the tool provides LCA results such as midpoints, endpoints, and contribution analyses.
 
 It is designed to run in any browser, completely offline, from a single HTML file.
