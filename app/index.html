@@ -24,9 +24,39 @@
                 </div>
             </template>
         
-            <div class="app">
+            <template x-if="appMode === 'welcome'">
+                <div class="welcome-page">
+                    <div class="welcome-page__container">
+                        <div class="welcome-page__logo">
+                            <img src="./assets/logo_opla.svg" class="welcome-page__logo__image" />
+                        </div>
+                        <h1 class="welcome-page__title">Welcome to OPLA</h1>
+                        <p class="welcome-page__subtitle">Open Product Life Cycle Assessment</p>
+                        
+                        <div class="welcome-page__choices">
+                            <button 
+                                @click="startNewProject()" 
+                                class="welcome-page__choice welcome-page__choice--new">
+                                <div class="welcome-page__choice__icon">➕</div>
+                                <div class="welcome-page__choice__title">Create a New Project</div>
+                                <div class="welcome-page__choice__description">Start a new product assessment from scratch</div>
+                            </button>
+
+                            <button 
+                                @click="startComparison()" 
+                                class="welcome-page__choice welcome-page__choice--compare">
+                                <div class="welcome-page__choice__icon">📊</div>
+                                <div class="welcome-page__choice__title">Compare Projects</div>
+                                <div class="welcome-page__choice__description">Compare multiple projects side by side</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        
+            <div class="app" x-show="appMode !== 'welcome'">
                 <div class="app__leftNav">
-                    <div class="app__leftNav__logo">
+                    <div class="app__leftNav__logo clickable" @click="returnToWelcome()">
                         <div class="app__leftNav__logo__opla">
                             <img class="app__leftNav__logo__opla__image" src="./assets/logo_opla.svg" />
                         </div>

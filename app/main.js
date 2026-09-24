@@ -2,6 +2,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('global', () => ({
 
         isImporting: false,
+        appMode: 'welcome',  // 'welcome', 'new-project', or 'comparison'
 
         init() {
             this.resetNewMaterial();
@@ -2490,6 +2491,20 @@ document.addEventListener('alpine:init', () => {
             };
         
             input.click();
+        },
+
+        startNewProject() {
+            this.appMode = 'new-project';
+            this.currentStep = 'goal';
+        },
+
+        startComparison() {
+            this.appMode = 'comparison';
+            // TODO: Implement comparison mode
+        },
+
+        returnToWelcome() {
+            this.appMode = 'welcome';
         },
     }))
 })
