@@ -1,0 +1,726 @@
+/* ==========================================================================
+   OPLA Results Comparator (comparison mode)
+   Strict BEM, every block prefixed with "compare-". Shared layout pieces
+   (app__leftNav, app__content, card) live in style.css.
+   ========================================================================== */
+
+.app--compare {
+    color: #222;
+}
+
+/* ---------- Banners ---------- */
+.compare-banner {
+    width: 100%;
+    max-width: 1150px;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.compare-banner--warn {
+    background: #FFF3DE;
+    border: 1px solid #FA9824;
+    color: #7a4b00;
+}
+
+.compare-banner--info {
+    background: #EAF5E6;
+    border: 1px solid #5fab4c;
+    color: #2f5d24;
+}
+
+.compare-banner--below {
+    margin-top: 12px;
+    max-width: none;
+}
+
+.compare-banner__icon {
+    font-weight: 700;
+}
+
+.compare-banner__list {
+    margin: 6px 0 0 0;
+    padding-left: 18px;
+}
+
+/* ---------- Candidates list (one compact row per project) ---------- */
+.compare-list {
+    margin-top: 16px;
+}
+
+.compare-list__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    table-layout: fixed;
+}
+
+.compare-list__head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #fff;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #707070;
+    padding: 6px 8px;
+    border-bottom: 2px solid #e8e8e8;
+    white-space: nowrap;
+}
+
+.compare-list__head:nth-child(1) { width: 64px; }
+.compare-list__head:nth-child(2) { width: 17%; }
+.compare-list__head:nth-child(3) { width: 17%; }
+.compare-list__head:nth-child(5) { width: 72px; }
+.compare-list__head:nth-child(6) { width: 220px; }
+.compare-list__head:nth-child(7) { width: 62px; }
+.compare-list__head:nth-child(8) { width: 100px; }
+
+.compare-list__head--center {
+    text-align: center;
+}
+
+.compare-list__row {
+    height: 36px;
+}
+
+.compare-list__row:hover {
+    background: #fafafa;
+}
+
+.compare-list__row--inactive {
+    opacity: .5;
+}
+
+.compare-list__cell {
+    padding: 3px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.compare-list__cell--index,
+.compare-list__cell--actions {
+    overflow: visible;
+    text-overflow: clip;
+}
+
+.compare-list__cell--index {
+    padding-right: 0;
+}
+
+.compare-list__cell--muted {
+    color: #707070;
+}
+
+.compare-list__cell--center {
+    text-align: center;
+}
+
+.compare-list__cell--actions {
+    text-align: right;
+}
+
+.compare-list__swatch {
+    width: 18px;
+    height: 18px;
+    border: none;
+    padding: 0;
+    margin: 0;
+    background: none;
+    cursor: pointer;
+    border-radius: 4px;
+    overflow: hidden;
+    vertical-align: middle;
+}
+
+.compare-list__swatch::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.compare-list__swatch::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+.compare-list__index {
+    display: inline-block;
+    margin-left: 6px;
+    color: #9a9a9a;
+    font-size: 12px;
+    vertical-align: middle;
+}
+
+/* Resets OPLA's global input styles (padding, border, 300px width) */
+.compare-list__input {
+    width: 100%;
+    font-size: 13px;
+    border: none;
+    border-bottom: 1px solid transparent;
+    border-radius: 0;
+    padding: 3px 2px;
+    background: transparent;
+    text-overflow: ellipsis;
+}
+
+.compare-list__input:hover {
+    border-bottom-color: #e0e0e0;
+}
+
+.compare-list__input:focus {
+    outline: none;
+    border-bottom-color: #5fab4c;
+}
+
+.compare-list__input--name {
+    font-weight: 600;
+}
+
+.compare-list__input--duplicate,
+.compare-list__input--duplicate:hover {
+    border-bottom-color: #FA9824;
+    background: #FFF3DE;
+}
+
+.compare-list__expand {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.compare-list__expand:hover {
+    color: #2f5d24;
+}
+
+.compare-list__caret {
+    display: inline-block;
+    width: 12px;
+    transition: transform .15s;
+}
+
+.compare-list__caret--open {
+    transform: rotate(90deg);
+}
+
+.compare-list__action {
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: #eee;
+    color: #555;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    margin-left: 2px;
+}
+
+.compare-list__action:hover {
+    background: #e0e0e0;
+}
+
+.compare-list__action--remove:hover {
+    background: #ff4c4c;
+    color: #fff;
+}
+
+.compare-list__action:disabled {
+    opacity: .35;
+    cursor: default;
+    background: #eee;
+}
+
+.compare-list__details > .compare-list__cell {
+    white-space: normal;
+    background: #fafafa;
+    padding: 8px;
+}
+
+.compare-list__groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+    font-size: 12px;
+}
+
+.compare-list__group {
+    min-width: 200px;
+}
+
+.compare-list__group-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #707070;
+    margin-bottom: 2px;
+}
+
+.compare-list__item {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    color: #444;
+}
+
+.compare-list__item-amount {
+    white-space: nowrap;
+    color: #707070;
+}
+
+.compare-list__empty {
+    padding: 18px 8px;
+    text-align: center;
+    color: #9a9a9a;
+    font-size: 13px;
+}
+
+.compare-candidates-footer {
+    margin-top: 16px;
+    text-align: right;
+}
+
+.compare-candidates-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.compare-candidates-header__title {
+    margin-bottom: 0;
+}
+
+.compare-candidates-header__actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+/* ---------- Drop zone ---------- */
+.compare-dropzone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 2px dashed #c2c2c2;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    font-size: 14px;
+    color: #707070;
+    cursor: pointer;
+    transition: .15s;
+}
+
+.compare-dropzone:hover,
+.compare-dropzone--over {
+    border-color: #5fab4c;
+    background: #f4faf2;
+    color: #2f5d24;
+}
+
+.compare-dropzone__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #5fab4c;
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.compare-dropzone__input {
+    display: none;
+}
+
+/* ---------- Buttons ---------- */
+.compare-link-button {
+    background: none;
+    border: none;
+    color: #5fab4c;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0;
+}
+
+.compare-button {
+    color: white;
+    padding: 8px 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    background: #5fab4c;
+}
+
+.compare-button--grey {
+    background: #c2c2c2;
+}
+
+.compare-button--orange {
+    background: #FA9824;
+}
+
+.compare-button--outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    color: #2f5d24;
+    border: 1px solid #5fab4c;
+    transition: background .15s;
+}
+
+.compare-button--outline:hover {
+    background: #f4faf2;
+}
+
+.compare-button__icon {
+    flex-shrink: 0;
+}
+
+/* Resets OPLA's global input styles (padding, border, 300px width) */
+.compare-checkbox {
+    width: auto;
+    padding: 0;
+    margin: 0;
+}
+
+
+/* ---------- Comparison context strip ---------- */
+.compare-context {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 22px;
+    align-items: center;
+    font-size: 13px;
+    color: #444;
+}
+
+.compare-context__cands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+}
+
+.compare-context__cand {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.compare-context__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.compare-context__muted {
+    color: #707070;
+}
+
+.compare-context__link {
+    color: #5fab4c;
+}
+
+.compare-context__spacer {
+    flex: 1;
+}
+
+/* ---------- Controls ---------- */
+.compare-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    align-items: center;
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+.compare-controls__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.compare-controls__select {
+    width: auto;
+    padding: 5px 8px;
+    border: 1px solid #d5d5d5;
+    border-radius: 6px;
+    background: white;
+    max-width: 380px;
+    font-size: 14px;
+}
+
+.compare-seg {
+    display: inline-flex;
+    border: 1px solid #d5d5d5;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.compare-seg__button {
+    border: none;
+    background: white;
+    padding: 5px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #444;
+}
+
+.compare-seg__button--active {
+    background: #5fab4c;
+    color: white;
+}
+
+.compare-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.compare-checks__label {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    color: #444;
+}
+
+/* ---------- Charts ---------- */
+.compare-chart {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* Chart larger than the card (many candidates): scroll inside the card, scrollbar shown only on overflow */
+.compare-chart--scrollable {
+    overflow: auto;
+    max-height: 75vh;
+}
+
+/* hidden axis tooltips sit just below the chart and would add a needless scrollbar */
+.compare-chart--scrollable .apexcharts-xaxistooltip,
+.compare-chart--scrollable .apexcharts-yaxistooltip {
+    display: none;
+}
+
+.compare-chart--scrollable::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.compare-chart--scrollable::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 6px;
+}
+
+.compare-chart--scrollable::-webkit-scrollbar-thumb {
+    background: #b5b5b5;
+    border: 2px solid #f0f0f0;
+    border-radius: 6px;
+}
+
+.compare-chart--scrollable::-webkit-scrollbar-thumb:hover {
+    background: #8f8f8f;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+    .compare-chart--scrollable {
+        scrollbar-color: #b5b5b5 #f0f0f0;
+    }
+}
+
+.compare-charts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.compare-charts__item {
+    flex: 1 1 420px;
+    min-width: 0;
+}
+
+.compare-subtitle {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 18px 0 6px 0;
+}
+
+.compare-empty {
+    padding: 40px;
+    text-align: center;
+    color: #707070;
+    font-size: 14px;
+    border: 1px dashed #ddd;
+    border-radius: 12px;
+}
+
+/* ---------- Heatmap / tables ---------- */
+.compare-heat {
+    overflow-x: auto;
+}
+
+.compare-heat--spaced {
+    margin-top: 14px;
+}
+
+.compare-heat__table {
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    width: 100%;
+}
+
+.compare-heat__head,
+.compare-heat__cell {
+    padding: 7px 12px;
+    text-align: right;
+    white-space: nowrap;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.compare-heat__head {
+    font-weight: 600;
+}
+
+.compare-heat__head--cand {
+    cursor: pointer;
+    user-select: none;
+}
+
+.compare-heat__head--cand:hover {
+    text-decoration: underline;
+}
+
+.compare-heat__head--sorted::after {
+    content: " \25BC";
+    font-size: 10px;
+}
+
+.compare-heat__head--label,
+.compare-heat__cell--label {
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 1;
+}
+
+.compare-heat__cell--value {
+    border-radius: 6px;
+}
+
+.compare-heat__cell--best {
+    font-weight: 700;
+}
+
+.compare-heat__cell--group {
+    background: #FEEAD3;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 12px;
+}
+
+.compare-heat__cell--group-end {
+    background: #DEEBF2;
+}
+
+.compare-heat__cell--summary {
+    font-weight: 600;
+    background: #fafafa;
+}
+
+.compare-heat__unit {
+    color: #707070;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.compare-heat__rel {
+    font-size: 11px;
+    color: #555;
+    margin-left: 4px;
+}
+
+.compare-heat__missing {
+    color: #aaa;
+}
+
+.compare-legend-scale {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #707070;
+    margin-top: 10px;
+}
+
+.compare-legend-scale__bar {
+    width: 160px;
+    height: 10px;
+    border-radius: 5px;
+    background: linear-gradient(90deg, #5fab4c, #eeeeee, #ff4c4c);
+}
+
+/* ---------- Modal ---------- */
+.compare-modal {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.compare-modal__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .5);
+}
+
+.compare-modal__content {
+    position: relative;
+    background: white;
+    padding: 24px;
+    border-radius: 10px;
+    max-width: 560px;
+    width: 92%;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-size: 14px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.compare-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}

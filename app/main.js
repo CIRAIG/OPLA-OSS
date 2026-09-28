@@ -1646,6 +1646,37 @@ document.addEventListener('alpine:init', () => {
         },
 
         exportMidPointImpactAsCSV() {
+            this.downloadCSV("midpoint_impact_results.csv", this.buildMidPointImpactCSV());
+        },
+
+        exportEndPointImpactAsCSV() {
+            this.downloadCSV("endpoint_impact_results.csv", this.buildEndPointImpactCSV());
+        },
+
+        exportFirstChartDataAsCSV() {
+            this.downloadCSV("first_chart_data.csv", this.buildFirstChartCSV());
+        },
+
+        exportMidPointImpactChartDataAsCSV() {
+            this.downloadCSV("midpoint_chart_data.csv", this.buildMidPointChartCSV());
+        },
+
+        exportEndPointImpactChartDataAsCSV() {
+            this.downloadCSV("endpoint_chart_data.csv", this.buildEndPointChartCSV());
+        },
+
+        downloadCSV(filename, csvText) {
+            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvText);
+
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        },
+
+        buildMidPointImpactCSV() {
             const rows = [
                 ["Impact Type", "Amount", "Unit"],
                 ...this.midPointImpactResults().map(result => [
@@ -1654,82 +1685,42 @@ document.addEventListener('alpine:init', () => {
                     result.unit
                 ])
             ];
-            const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-            const encodedUri = encodeURI(csvContent);
-
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "midpoint_impact_results.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            return rows.map(e => e.join(",")).join("\n");
         },
 
-        exportEndPointImpactAsCSV() {
+        buildEndPointImpactCSV() {
             const rows = [
                 ["Impact Type", "Amount", "Unit"],
                 ...this.endPointImpactResults().map(result => [result.impact, result.value, result.unit])
             ];
-            const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-            const encodedUri = encodeURI(csvContent);
-
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "endpoint_impact_results.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            return rows.map(e => e.join(",")).join("\n");
         },
 
-        exportFirstChartDataAsCSV() {
+        buildFirstChartCSV() {
             const data = this.getContributionChartData();
             const rows = [
                 ["Impact Category", ...data.categories],
                 ...data.series.map(serie => [`"${serie.name}"`, ...serie.data])
             ];
-            const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-            const encodedUri = encodeURI(csvContent);
-
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "first_chart_data.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            return rows.map(e => e.join(",")).join("\n");
         },
 
-        exportMidPointImpactChartDataAsCSV() {
+        buildMidPointChartCSV() {
             const data = this.getMidPointChartData();
             const rows = [
                 ["Impact Category", ...data.categories.map(category => `"${category}"`)],
                 ...data.series.map(serie => [`"${serie.name}"`, ...serie.data])
             ];
-            const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-            const encodedUri = encodeURI(csvContent);
-
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "midpoint_chart_data.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            return rows.map(e => e.join(",")).join("\n");
         },
 
-        exportEndPointImpactChartDataAsCSV() {
+        buildEndPointChartCSV() {
             const data = this.getEndPointChartData();
             const rows = [
                 ["Impact Category", ...data.categories],
                 ...data.series.map(serie => [`"${serie.name}"`, ...serie.data])
             ];
-            const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-            const encodedUri = encodeURI(csvContent);
-
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "endpoint_chart_data.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            return rows.map(e => e.join(",")).join("\n");
         },
 
         getContributionChartData() {
@@ -2404,7 +2395,19 @@ document.addEventListener('alpine:init', () => {
          * Save the current LCA study into a JSON file for later retrieval
          */
         save() {
-            const data = {
+            const data = this.buildStudyData();
+        
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "lca_study.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        },
+
+        buildStudyData() {
+            return {
                 goal_projectName: this.goal_projectName,
                 goal_functionalUnit: this.goal_functionalUnit,
                 goal_productionLocation: this.goal_productionLocation,
@@ -2419,15 +2422,56 @@ document.addEventListener('alpine:init', () => {
         
                 customMaterialsDatabase: this.customMaterialsDatabase,
                 currentStep: this.currentStep,
+
+                // Readable project summary and precomputed results, read by the comparison mode (ignored on import)
+                summary: this.buildSummaryData(),
+                results: this.buildResultsData(),
             };
-        
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "lca_study.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+        },
+
+        buildSummaryData() {
+            const rows = (list, databases) => (list || [])
+                .filter(row => row && row.type)
+                .map(row => {
+                    const amount = parseFloat(row.mass ?? row.percentage);
+                    return {
+                        name: this.getNameFromUUID(row.type),
+                        amount: Number.isFinite(amount) ? amount : null,
+                        unit: this.getUnitFromType(databases, row.type) || '',
+                    };
+                });
+            return {
+                projectName: this.goal_projectName || '',
+                functionalUnit: this.goal_functionalUnit || '',
+                productionLocation: this.goal_productionLocation ? this.getRegionName(this.goal_productionLocation) : '',
+                usageLocation: this.goal_usageLocation ? this.getRegionName(this.goal_usageLocation) : '',
+                isFlexible: String(this.goal_isFlexible).toLowerCase() === 'yes',
+                eolApproach: this.eol_approachSelected === 'substituted' ? 'Substitution at end-of-life' : 'Recycled content',
+                materials: rows(this.composition_materials, [this.materialsDatabase, this.customMaterialsDatabase]),
+                processes: rows(this.processing_methods, [this.processingMethodsDatabase]),
+                eols: rows(this.eol_methods, [this.eolMethodsDatabase]),
+            };
+        },
+
+        buildResultsData() {
+            const totals = items => items.map(r => ({ impact: r.impact, value: parseFloat(r.value), unit: r.unit }));
+            const shares = chart => ({
+                categories: chart.categories || [],
+                contributors: chart.series.map(s => ({ name: s.name, data: s.data.map(v => parseFloat(v) || 0) })),
+            });
+            return {
+                version: 1,
+                generatedAt: new Date().toISOString(),
+                midpoints: {
+                    totals: totals(this.midPointImpactResults()),
+                    contributions: shares(this.getMidPointChartData()),
+                },
+                endpoints: {
+                    totals: totals(this.endPointImpactResults()),
+                    contributions: shares(this.getEndPointChartData()),
+                    midpointAttribution: shares(this.getContributionChartData()),
+                },
+            };
         },
 
         /**
@@ -2494,13 +2538,37 @@ document.addEventListener('alpine:init', () => {
         },
 
         startNewProject() {
+            this.resetProject();
             this.appMode = 'new-project';
+        },
+
+        resetProject() {
+            this.goal_projectName = '';
+            this.goal_functionalUnit = '';
+            this.goal_productionLocation = '';
+            this.goal_usageLocation = '';
+            this.goal_isFlexible = '';
+
+            this.composition_materials = [{ type: '', mass: '' }];
+            this.processing_methods = [{ type: '', mass: '' }];
+            this.eol_methods = [{ type: '', percentage: '' }];
+            this.eol_useDefaultMix = false;
+            this.eol_approachSelected = false;
+            this.customMaterialsDatabase = [];
+
+            this.indexOfMaterialRowToAddNew = null;
+            this.indexOfMaterialRowToEdit = null;
+            this.indexOfMaterialRowToParametrize = null;
+            this.currentlyEditingProcessId = null;
+            this.currentlyEditingEolId = null;
+            this.currentlySearching = null;
+            this.resetNewMaterial();
+
             this.currentStep = 'goal';
         },
 
         startComparison() {
             this.appMode = 'comparison';
-            // TODO: Implement comparison mode
         },
 
         returnToWelcome() {

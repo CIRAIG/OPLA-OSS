@@ -10,8 +10,10 @@
         <!--[REPLACE-TAG|DATASETS]-->
 
         <script src="./main.js"></script>
+        <script src="./compare.js"></script>
 
         <link rel="stylesheet" href="./style.css">
+        <link rel="stylesheet" href="./compare.css">
     </head>
     <body>
         <div x-data="global">
@@ -54,7 +56,7 @@
                 </div>
             </template>
         
-            <div class="app" x-show="appMode !== 'welcome'">
+            <div class="app" x-show="appMode === 'new-project'">
                 <div class="app__leftNav">
                     <div class="app__leftNav__logo clickable" @click="returnToWelcome()">
                         <div class="app__leftNav__logo__opla">
@@ -350,6 +352,21 @@
                         <template x-if="isSafari()">
                             <span>Note that export as CSV does not works on some version of SAFARI</span>
                         </template>
+
+                        <button type="button" class="compare-invite" @click="save()" title="Download lca_study.json, then drop it in Compare Projects">
+                            <span class="compare-invite__icon" aria-hidden="true">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></svg>
+                            </span>
+                            <span class="compare-invite__text">
+                                <span class="compare-invite__title">Export project to compare</span>
+                                <span class="compare-invite__description">Download this project's <strong>lca_study.json</strong> and drop it, with your other projects, in <strong>Compare Projects</strong> on the welcome page.</span>
+                            </span>
+                            <span class="compare-invite__action">
+                                Export project
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12"/><path d="m6 11 6 6 6-6"/><path d="M5 20h14"/></svg>
+                            </span>
+                        </button>
+
                         <div class="app__content__step-5__actions">
                             <button class="nextButton" @click="exportAsCSV()">Export as CSV</button>
                             <button class="nextButton" @click="exportAsPDF()">Export as PDF</button>
@@ -817,6 +834,362 @@
                             <button class="modal-searching__content__actions__button modal-searching__content__actions__button" @click="closeSearchingModal()">Close</button>
                         </div>
                     </div>
+                </div>
+            </template>
+
+            <!-- ================= COMPARISON MODE ================= -->
+            <!-- x-if recreates the comparator every time the mode is entered (fresh state) -->
+            <template x-if="appMode === 'comparison'">
+                <div class="app app--compare" x-data="comparator">
+                    <div class="app__leftNav app__leftNav--compare">
+                        <div class="app__leftNav__logo clickable" @click="returnToWelcome()">
+                            <div class="app__leftNav__logo__opla">
+                                <img class="app__leftNav__logo__opla__image" src="./assets/logo_opla.svg" />
+                            </div>
+                            <div class="app__leftNav__logo__subtitle">Results Comparator</div>
+                            <div class="app__leftNav__logo__ciraig" >
+                                <!--[REPLACE-TAG|LOGO]-->
+                            </div>
+                        </div>
+
+                        <div class="app__leftNav__steps app__leftNav__steps--compare">
+                            <template x-for="step in views" :key="step.id">
+                                <div class="app__leftNav__steps__step app__leftNav__steps__step--clickable" :class="{'app__leftNav__steps__step--active': view === step.id}" @click="setView(step.id)">
+                                    <div class="app__leftNav__steps__step__index" x-text="step.index"></div>
+                                    <div class="app__leftNav__steps__step__title" x-text="step.title"></div>
+                                    <div class="app__leftNav__steps__step__status" :class="viewStatusClass(step.id)" x-text="viewStatus(step.id)"></div>
+                                </div>
+                            </template>
+
+                            <div class="app__leftNav__steps__ctas">
+                                <button @click="exportTableCSV()" class="app__leftNav__steps__ctas__button app__leftNav__steps__ctas__button--secondary">Export table (CSV)</button>
+                            </div>
+
+                            <div class="app__leftNav__steps__version app__leftNav__steps__version--compare">
+                                version [develop]
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="app__content app__content--compare">
+
+                        <!-- Functional unit warning (never blocks anything) -->
+                        <template x-if="fuWarning()">
+                            <div class="compare-banner compare-banner--warn">
+                                <div class="compare-banner__icon">!</div>
+                                <div>
+                                    <strong>Functional unit check</strong>
+                                    <ul class="compare-banner__list"><template x-for="p in fuWarning()"><li x-text="p"></li></template></ul>
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="coverageWarnings().length">
+                            <div class="compare-banner compare-banner--warn">
+                                <div class="compare-banner__icon">!</div>
+                                <div>
+                                    <strong>Data coverage</strong>
+                                    <ul class="compare-banner__list"><template x-for="p in coverageWarnings()"><li x-text="p"></li></template></ul>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- ===== STEP 1: CANDIDATES ===== -->
+                        <div class="card card--compare" x-show="view === 'candidates'">
+                            <div class="compare-candidates-header">
+                                <h2 class="card__title compare-candidates-header__title">Candidates</h2>
+                                <div class="compare-candidates-header__actions">
+                                    <button class="compare-button compare-button--outline" @click="loadSession()"
+                                            title="Open an opla_comparison.json saved with Save comparison">
+                                        <svg class="compare-button__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                                        Load comparison
+                                    </button>
+                                    <button class="compare-button compare-button--outline" @click="saveSession()"
+                                            title="Download the candidates and settings as opla_comparison.json">
+                                        <svg class="compare-button__icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>
+                                        Save comparison
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="card__comment">
+                                Each candidate is one OPLA project. In the results step of a project, click <em>Export project</em>: the
+                                <code>lca_study.json</code> it saves contains the project and all its results, so it is the only file needed.
+                                Drop several of them at once to add one candidate per project.
+                            </p>
+
+                            <label class="compare-dropzone" :class="{'compare-dropzone--over': dragOver}"
+                                   @dragover.prevent="dragOver = true" @dragleave="dragOver = false"
+                                   @drop.prevent="dragOver = false; onFiles($event.dataTransfer.files)">
+                                <span class="compare-dropzone__icon">+</span>
+                                <span>Drop OPLA project files (<code>lca_study.json</code> from <em>Export project</em>) here, one candidate per file, or click to browse</span>
+                                <input type="file" class="compare-dropzone__input" multiple accept=".json,application/json" @change="onFiles($event.target.files); $event.target.value = ''">
+                            </label>
+
+                            <template x-if="dropNotices.length">
+                                <div class="compare-banner compare-banner--warn compare-banner--below">
+                                    <div class="compare-banner__icon">!</div>
+                                    <div>
+                                        <div>Some files were not added:</div>
+                                        <ul class="compare-banner__list">
+                                            <template x-for="(n, i) in dropNotices" :key="i">
+                                                <li class="compare-banner__item" x-text="n"></li>
+                                            </template>
+                                        </ul>
+                                        <button class="compare-link-button" @click="clearDropNotices()">dismiss</button>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <div class="compare-list">
+                                <table class="compare-list__table">
+                                    <thead>
+                                        <tr>
+                                            <th class="compare-list__head compare-list__head--index">#</th>
+                                            <th class="compare-list__head">Name</th>
+                                            <th class="compare-list__head">Functional unit</th>
+                                            <th class="compare-list__head">Production → usage</th>
+                                            <th class="compare-list__head">Package</th>
+                                            <th class="compare-list__head">Composition</th>
+                                            <th class="compare-list__head compare-list__head--center" title="Include in comparison">Include</th>
+                                            <th class="compare-list__head"></th>
+                                        </tr>
+                                    </thead>
+                                    <template x-for="(c, index) in candidates" :key="c.id">
+                                        <tbody class="compare-list__body">
+                                            <tr class="compare-list__row" :class="{'compare-list__row--inactive': !c.active}">
+                                                <td class="compare-list__cell compare-list__cell--index">
+                                                    <input type="color" class="compare-list__swatch" x-model="c.color" @change="afterChange()" title="Candidate colour">
+                                                    <span class="compare-list__index" x-text="index + 1"></span>
+                                                </td>
+                                                <td class="compare-list__cell compare-list__cell--name">
+                                                    <input type="text" class="compare-list__input compare-list__input--name" :class="{'compare-list__input--duplicate': duplicateName(c)}"
+                                                           :title="duplicateName(c) ? 'Another candidate has the same name; rename one of them to keep the charts readable.' : c.name"
+                                                           x-model="c.name" @change="afterChange()" placeholder="Candidate name" spellcheck="false">
+                                                </td>
+                                                <td class="compare-list__cell compare-list__cell--fu">
+                                                    <input type="text" class="compare-list__input" x-model="c.fu" :title="c.fu" @change="afterChange()" placeholder="e.g. Protecting one kg of meat" spellcheck="false">
+                                                </td>
+                                                <td class="compare-list__cell compare-list__cell--muted" x-text="summaryLocations(c)" :title="summaryLocations(c)"></td>
+                                                <td class="compare-list__cell compare-list__cell--muted" x-text="c.summary ? (c.summary.isFlexible ? 'Flexible' : 'Rigid') : '–'"></td>
+                                                <td class="compare-list__cell compare-list__cell--muted">
+                                                    <button class="compare-list__expand" x-show="summaryGroups(c).length" @click="toggleDetails(c)" :aria-expanded="isExpanded(c)"
+                                                            :title="(isExpanded(c) ? 'Hide details: ' : 'Show details: ') + summaryCounts(c)">
+                                                        <span class="compare-list__caret" :class="{'compare-list__caret--open': isExpanded(c)}">▸</span>
+                                                        <span x-text="summaryCounts(c)"></span>
+                                                    </button>
+                                                </td>
+                                                <td class="compare-list__cell compare-list__cell--center">
+                                                    <input type="checkbox" class="compare-checkbox" x-model="c.active" @change="afterChange()" title="Include in comparison">
+                                                </td>
+                                                <td class="compare-list__cell compare-list__cell--actions">
+                                                    <button class="compare-list__action" title="Move up" @click="move(c, -1)" :disabled="index === 0">↑</button>
+                                                    <button class="compare-list__action" title="Move down" @click="move(c, 1)" :disabled="index === candidates.length - 1">↓</button>
+                                                    <button class="compare-list__action compare-list__action--remove" title="Remove candidate" @click="removeCandidate(c)">×</button>
+                                                </td>
+                                            </tr>
+                                            <tr class="compare-list__details" x-show="isExpanded(c)">
+                                                <td class="compare-list__cell"></td>
+                                                <td class="compare-list__cell" colspan="7">
+                                                    <div class="compare-list__groups">
+                                                        <div class="compare-list__group" x-show="c.summary && c.summary.eolApproach">
+                                                            <div class="compare-list__group-title">End-of-life approach</div>
+                                                            <div class="compare-list__item" x-text="c.summary && c.summary.eolApproach"></div>
+                                                        </div>
+                                                        <template x-for="g in summaryGroups(c)" :key="g.title">
+                                                            <div class="compare-list__group">
+                                                                <div class="compare-list__group-title" x-text="g.title"></div>
+                                                                <template x-for="(r, i) in g.rows" :key="i">
+                                                                    <div class="compare-list__item">
+                                                                        <span class="compare-list__item-name" x-text="r.name"></span>
+                                                                        <span class="compare-list__item-amount" x-text="summaryAmount(r)"></span>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </template>
+                                </table>
+                                <div class="compare-list__empty" x-show="!candidates.length">No candidate yet. Drop the <code>lca_study.json</code> files of your OPLA projects in the zone above.</div>
+                            </div>
+
+                            <div class="compare-candidates-footer" x-show="candidates.length">
+                                <button class="compare-link-button" @click="clearAll()">remove all candidates</button>
+                            </div>
+                        </div>
+
+                        <!-- ===== Shared context strip (views only) ===== -->
+                        <div class="card card--compare card--compact" x-show="view !== 'candidates'">
+                            <div class="compare-context">
+                                <div class="compare-context__cands">
+                                    <template x-for="c in active()" :key="c.id">
+                                        <span class="compare-context__cand"><span class="compare-context__dot" :style="'background:' + c.color"></span><span x-text="c.name"></span><span class="compare-context__muted" x-show="c.fu" x-text="' · ' + c.fu"></span></span>
+                                    </template>
+                                    <span class="compare-context__muted" x-show="!active().length">No active candidate. Load results in <a href="#" class="compare-context__link" @click.prevent="setView('candidates')">Candidates</a>.</span>
+                                </div>
+                                <span class="compare-context__spacer"></span>
+                                <label class="compare-controls__label">Reference for relative values:
+                                    <select class="compare-controls__select" x-model="referenceId" data-sync="referenceId" @change="afterChange()">
+                                        <option value="worst">Worst candidate per category (= 100%)</option>
+                                        <template x-for="c in active()" :key="c.id"><option :value="String(c.id)" x-text="c.name"></option></template>
+                                    </select>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- ===== VIEW A: RELATIVE ===== -->
+                        <div class="card card--compare" x-show="view === 'relative'">
+                            <h2 class="card__title">Relative comparison</h2>
+                            <p class="card__comment">Every impact category on one axis. Each candidate is expressed as a percentage of the reference (<span x-text="referenceLabel()"></span>), so a bar below the dashed line means a lower impact than the reference in that category. Hover a bar for the absolute value.</p>
+                            <div class="compare-controls">
+                                <span class="compare-seg"><button class="compare-seg__button" :class="{'compare-seg__button--active': relLevel === 'midpoint'}" @click="relLevel = 'midpoint'; afterChange()">Midpoints</button><button class="compare-seg__button" :class="{'compare-seg__button--active': relLevel === 'endpoint'}" @click="relLevel = 'endpoint'; afterChange()">Endpoints</button></span>
+                                <span class="compare-seg"><button class="compare-seg__button" :class="{'compare-seg__button--active': relLayout === 'columns'}" @click="relLayout = 'columns'; afterChange()">Columns</button><button class="compare-seg__button" :class="{'compare-seg__button--active': relLayout === 'rows'}" @click="relLayout = 'rows'; afterChange()">Rows</button></span>
+                            </div>
+                            <div class="compare-empty" x-show="active().length < 1">Load at least one candidate to draw this chart (two or more to compare).</div>
+                            <div class="compare-chart compare-chart--scrollable"><div id="chart-relative"></div></div>
+                        </div>
+
+                        <!-- ===== VIEW B: ABSOLUTE ===== -->
+                        <div class="card card--compare" x-show="view === 'absolute'">
+                            <h2 class="card__title">Absolute values per category</h2>
+                            <p class="card__comment">One category at a time, in its own unit, exactly as OPLA reports it (three significant digits, scientific notation). The two endpoint indicators are always shown underneath.</p>
+                            <div class="compare-controls">
+                                <label class="compare-controls__label">Category:
+                                    <select class="compare-controls__select" x-model="absCategory" data-sync="absCategory" @change="afterChange()">
+                                        <template x-for="g in categoryOptions()" :key="g.group">
+                                            <optgroup :label="g.group">
+                                                <template x-for="o in g.items" :key="o.key"><option :value="o.key" x-text="o.label"></option></template>
+                                            </optgroup>
+                                        </template>
+                                    </select>
+                                </label>
+                            </div>
+                            <div class="compare-empty" x-show="active().length < 1">Load at least one candidate to draw this chart.</div>
+                            <div class="compare-chart"><div id="chart-absolute"></div></div>
+                            <div class="compare-subtitle" x-show="categories('endpoint').length">Endpoint indicators</div>
+                            <div class="compare-charts">
+                                <div class="compare-charts__item"><div id="chart-abs-end-0"></div></div>
+                                <div class="compare-charts__item"><div id="chart-abs-end-1"></div></div>
+                            </div>
+                        </div>
+
+                        <!-- ===== VIEW C: RADAR ===== -->
+                        <div class="card card--compare" x-show="view === 'radar'">
+                            <h2 class="card__title">Radar profile</h2>
+                            <p class="card__comment">The footprint of every candidate across all midpoint categories, normalised to the reference (<span x-text="referenceLabel()"></span> = 100%). A smaller polygon means a lower overall impact; hide categories below to focus the profile.</p>
+                            <div class="compare-checks" x-show="categories('midpoint').length">
+                                <template x-for="cat in categories('midpoint')" :key="cat">
+                                    <label class="compare-checks__label"><input type="checkbox" class="compare-checkbox" :checked="!radarHidden.includes(cat)" @change="toggleRadar(cat)"> <span x-text="cat"></span></label>
+                                </template>
+                                <button class="compare-link-button" @click="radarAll(true)">all</button>
+                                <button class="compare-link-button" @click="radarAll(false)">none</button>
+                            </div>
+                            <div class="compare-empty" x-show="active().length < 1 || radarCategories().length < 3">Needs at least one candidate and three visible categories.</div>
+                            <div class="compare-chart"><div id="chart-radar"></div></div>
+                        </div>
+
+                        <!-- ===== VIEW D: HEATMAP ===== -->
+                        <div class="card card--compare" x-show="view === 'heatmap'">
+                            <h2 class="card__title">Heatmap table</h2>
+                            <p class="card__comment">All numbers in one table. Within each category, the lowest value is tinted green and the highest red; the percentage is relative to the reference (<span x-text="referenceLabel()"></span>). Click a candidate name to sort the categories by that candidate's relative impact.</p>
+                            <div class="compare-empty" x-show="active().length < 1">Load at least one candidate to fill this table.</div>
+                            <div class="compare-heat" x-show="active().length">
+                                <table class="compare-heat__table">
+                                    <thead>
+                                        <tr>
+                                            <th class="compare-heat__head compare-heat__head--label">Impact category</th>
+                                            <template x-for="c in active()" :key="c.id">
+                                                <th class="compare-heat__head compare-heat__head--cand" :class="{'compare-heat__head--sorted': heatSort === c.id}" @click="sortBy(c)"><span class="compare-context__dot" :style="'background:' + c.color"></span> <span x-text="c.name"></span></th>
+                                            </template>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="row in heatAllRows()" :key="row.key">
+                                            <tr>
+                                                <td class="compare-heat__cell compare-heat__cell--label"
+                                                    :class="row.type === 'group' ? ('compare-heat__cell--group' + (row.level === 'endpoint' ? ' compare-heat__cell--group-end' : '')) : ''"
+                                                    :colspan="row.type === 'group' ? active().length + 1 : 1"><span x-text="row.label"></span> <span class="compare-heat__unit" x-text="row.unit || ''"></span></td>
+                                                <template x-for="(cell, i) in row.cells" :key="i">
+                                                    <td class="compare-heat__cell compare-heat__cell--value" :style="'background:' + heatColor(cell.t)" :class="{'compare-heat__cell--best': cell.best}">
+                                                        <span x-text="fmtSci(cell.v)"></span><span class="compare-heat__rel" x-show="cell.rel !== null" x-text="'(' + fmtPct(cell.rel, 0) + ')'"></span>
+                                                    </td>
+                                                </template>
+                                            </tr>
+                                        </template>
+                                        <tr x-show="active().length >= 2 && summaryWins().counted">
+                                            <td class="compare-heat__cell compare-heat__cell--label compare-heat__cell--summary">Lowest in … of <span x-text="summaryWins().counted"></span> midpoint categories</td>
+                                            <template x-for="c in active()" :key="c.id"><td class="compare-heat__cell compare-heat__cell--summary" x-text="summaryWins().wins[c.id]"></td></template>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="compare-legend-scale" x-show="active().length >= 2"><span>lowest</span><span class="compare-legend-scale__bar"></span><span>highest (within each category)</span></div>
+                        </div>
+
+                        <!-- ===== VIEW E: STACKED ===== -->
+                        <div class="card card--compare" x-show="view === 'stacked'">
+                            <h2 class="card__title">Stacked contributions</h2>
+                            <p class="card__comment">Why a candidate scores the way it does: for the chosen category, each bar is split into the contributions of its materials, processes and end-of-life routes (absolute value = total × share from OPLA's chart data). Candidates without a breakdown file appear as a single grey bar.</p>
+                            <div class="compare-controls">
+                                <label class="compare-controls__label">Category:
+                                    <select class="compare-controls__select" x-model="stackCategory" data-sync="stackCategory" @change="afterChange()">
+                                        <template x-for="g in categoryOptions()" :key="g.group">
+                                            <optgroup :label="g.group">
+                                                <template x-for="o in g.items" :key="o.key"><option :value="o.key" x-text="o.label"></option></template>
+                                            </optgroup>
+                                        </template>
+                                    </select>
+                                </label>
+                                <span class="compare-seg"><button class="compare-seg__button" :class="{'compare-seg__button--active': stackMode === 'absolute'}" @click="stackMode = 'absolute'; afterChange()">Absolute</button><button class="compare-seg__button" :class="{'compare-seg__button--active': stackMode === 'percent'}" @click="stackMode = 'percent'; afterChange()">100% stacked</button></span>
+                            </div>
+                            <div class="compare-empty" x-show="active().length < 1">Load at least one candidate (with its breakdown data) to draw this chart.</div>
+                            <div class="compare-chart"><div id="chart-stacked"></div></div>
+
+                            <template x-if="stackedTable() && stackedTable().names.length">
+                                <div class="compare-heat compare-heat--spaced">
+                                    <table class="compare-heat__table">
+                                        <thead>
+                                            <tr>
+                                                <th class="compare-heat__head compare-heat__head--label">Contributor</th>
+                                                <template x-for="r in stackedTable().rows" :key="r.cand.id"><th class="compare-heat__head"><span class="compare-context__dot" :style="'background:' + r.cand.color"></span> <span x-text="r.cand.name"></span></th></template>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="n in stackedTable().names" :key="n">
+                                                <tr>
+                                                    <td class="compare-heat__cell compare-heat__cell--label" x-text="n"></td>
+                                                    <template x-for="r in stackedTable().rows" :key="r.cand.id">
+                                                        <td class="compare-heat__cell"><template x-if="r.b && r.b.find(x => x.name === n)"><span><span x-text="fmtSci(r.b.find(x => x.name === n).value)"></span><span class="compare-heat__rel" x-text="'(' + fmtPct(r.b.find(x => x.name === n).share, 1) + ')'"></span></span></template><template x-if="!(r.b && r.b.find(x => x.name === n))"><span class="compare-heat__missing">–</span></template></td>
+                                                    </template>
+                                                </tr>
+                                            </template>
+                                            <tr>
+                                                <td class="compare-heat__cell compare-heat__cell--label compare-heat__cell--summary">Total <span class="compare-heat__unit" x-text="stackedTable().unit"></span></td>
+                                                <template x-for="r in stackedTable().rows" :key="r.cand.id"><td class="compare-heat__cell compare-heat__cell--summary" x-text="fmtSci(r.total)"></td></template>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="visible-only-on-print compare-print-footer">Generated with the OPLA Results Comparator <span x-text="version"></span> (CIRAIG / NRC Canada). Values are as exported by OPLA; relative values and breakdowns are computed from those exports.</div>
+                    </div>
+
+                    <template x-if="modal">
+                        <div class="compare-modal">
+                            <div class="compare-modal__overlay" @click="modal = null"></div>
+                            <div class="compare-modal__content">
+                                <strong x-text="modal.title"></strong>
+                                <div x-text="modal.text"></div>
+                                <div class="compare-modal__actions">
+                                    <button class="compare-button compare-button--grey" @click="modal = null" x-text="modal.confirm ? 'Cancel' : 'Close'"></button>
+                                    <button class="compare-button compare-button--orange" x-show="!!modal.confirm" @click="modal.confirm()">Confirm</button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
             </template>
         </div>
