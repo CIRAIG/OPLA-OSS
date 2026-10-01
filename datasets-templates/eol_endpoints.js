@@ -211,33 +211,33 @@ window.EOL_ENDPOINTS = [
     },
     {
         "sub-category":"Disposal Type C",
-        "name":"Activity 842 | RoW",
+        "name":"Activity 1094 | RoW",
         "location":"RoW",
         "unit":"kilogram",
         "comment":null,
         "Total-human-health":"2,47E-11",
         "Total-ecosystem-quality":"-0,000000009543236453",
-        "original_name":"Activity 842"
+        "original_name":"Activity 1094"
     },
     {
         "sub-category":"Disposal Type A",
-        "name":"Activity 843 | RER",
+        "name":"Activity 1095 | RER",
         "location":"RER",
         "unit":"kilowatt hour",
         "comment":"Proxy for generic material",
         "Total-human-health":"1,54E-07",
         "Total-ecosystem-quality":"0,00004504115084",
-        "original_name":"Activity 843"
+        "original_name":"Activity 1095"
     },
     {
         "sub-category":"Disposal Type C",
-        "name":"Activity 844 | GLO",
+        "name":"Activity 1096 | GLO",
         "location":"GLO",
         "unit":"meter",
         "comment":"Default market mix",
         "Total-human-health":"2,48E-04",
         "Total-ecosystem-quality":"0,000086187202",
-        "original_name":"Activity 844"
+        "original_name":"Activity 1096"
     },
     {
         "sub-category":"Disposal Type A",
@@ -381,13 +381,13 @@ window.EOL_ENDPOINTS = [
     },
     {
         "sub-category":"Disposal Type B",
-        "name":"Activity 851 | CA",
+        "name":"Activity 1097 | CA",
         "location":"CA",
         "unit":"kilowatt hour",
         "comment":null,
         "Total-human-health":"-5,24E-04",
         "Total-ecosystem-quality":"0",
-        "original_name":"Activity 851"
+        "original_name":"Activity 1097"
     },
     {
         "sub-category":"Disposal Type B",

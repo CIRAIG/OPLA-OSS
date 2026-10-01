@@ -862,7 +862,7 @@ window.EOL_CONTRIBUTIONS = [
     },
     {
         "sub-category":"Disposal Type C",
-        "name":"Activity 842 | RoW",
+        "name":"Activity 1094 | RoW",
         "location":"RoW",
         "unit":"kilogram",
         "comment":null,
@@ -899,11 +899,11 @@ window.EOL_CONTRIBUTIONS = [
         "Ecosystem-quality|Water-availability-freshwater-ecosystem":"6,93E-10",
         "Human-health|Water-availability-human-health":"-4,20E-10",
         "Ecosystem-quality|Water-availability-terrestrial-ecosystem":"-1,65E-10",
-        "original_name":"Activity 842"
+        "original_name":"Activity 1094"
     },
     {
         "sub-category":"Disposal Type A",
-        "name":"Activity 843 | RER",
+        "name":"Activity 1095 | RER",
         "location":"RER",
         "unit":"kilowatt hour",
         "comment":"Proxy for generic material",
@@ -940,11 +940,11 @@ window.EOL_CONTRIBUTIONS = [
         "Ecosystem-quality|Water-availability-freshwater-ecosystem":"6,28E-11",
         "Human-health|Water-availability-human-health":"-2,61E-04",
         "Ecosystem-quality|Water-availability-terrestrial-ecosystem":"3,89E-08",
-        "original_name":"Activity 843"
+        "original_name":"Activity 1095"
     },
     {
         "sub-category":"Disposal Type C",
-        "name":"Activity 844 | GLO",
+        "name":"Activity 1096 | GLO",
         "location":"GLO",
         "unit":"meter",
         "comment":"Default market mix",
@@ -981,7 +981,7 @@ window.EOL_CONTRIBUTIONS = [
         "Ecosystem-quality|Water-availability-freshwater-ecosystem":"-2,41E-10",
         "Human-health|Water-availability-human-health":"3,09E-08",
         "Ecosystem-quality|Water-availability-terrestrial-ecosystem":"4,37E-04",
-        "original_name":"Activity 844"
+        "original_name":"Activity 1096"
     },
     {
         "sub-category":"Disposal Type A",
@@ -1559,7 +1559,7 @@ window.EOL_CONTRIBUTIONS = [
     },
     {
         "sub-category":"Disposal Type B",
-        "name":"Activity 851 | CA",
+        "name":"Activity 1097 | CA",
         "location":"CA",
         "unit":"kilowatt hour",
         "comment":null,
@@ -1596,7 +1596,7 @@ window.EOL_CONTRIBUTIONS = [
         "Ecosystem-quality|Water-availability-freshwater-ecosystem":"3,51E-05",
         "Human-health|Water-availability-human-health":"1,81E-07",
         "Ecosystem-quality|Water-availability-terrestrial-ecosystem":"1,76E-08",
-        "original_name":"Activity 851"
+        "original_name":"Activity 1097"
     },
     {
         "sub-category":"Disposal Type B",

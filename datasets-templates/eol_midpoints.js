@@ -547,7 +547,7 @@ window.EOL_MIDPOINTS = [
     },
     {
         "sub-category":"Disposal Type C",
-        "name":"Activity 842 | RoW",
+        "name":"Activity 1094 | RoW",
         "location":"RoW",
         "unit":"kilogram",
         "comment":null,
@@ -569,11 +569,11 @@ window.EOL_MIDPOINTS = [
         "Photochemical-ozone-formation":"2,04E-10",
         "Terrestrial-acidification":"2,03E-10",
         "Water-scarcity":"0,000000004730611102",
-        "original_name":"Activity 842"
+        "original_name":"Activity 1094"
     },
     {
         "sub-category":"Disposal Type A",
-        "name":"Activity 843 | RER",
+        "name":"Activity 1095 | RER",
         "location":"RER",
         "unit":"kilowatt hour",
         "comment":"Proxy for generic material",
@@ -595,11 +595,11 @@ window.EOL_MIDPOINTS = [
         "Photochemical-ozone-formation":"7,23E-10",
         "Terrestrial-acidification":"1,22E-02",
         "Water-scarcity":"0,008683116921",
-        "original_name":"Activity 843"
+        "original_name":"Activity 1095"
     },
     {
         "sub-category":"Disposal Type C",
-        "name":"Activity 844 | GLO",
+        "name":"Activity 1096 | GLO",
         "location":"GLO",
         "unit":"meter",
         "comment":"Default market mix",
@@ -621,7 +621,7 @@ window.EOL_MIDPOINTS = [
         "Photochemical-ozone-formation":"4,40E-09",
         "Terrestrial-acidification":"-1,02E-02",
         "Water-scarcity":"-0,04297505269",
-        "original_name":"Activity 844"
+        "original_name":"Activity 1096"
     },
     {
         "sub-category":"Disposal Type A",
@@ -989,7 +989,7 @@ window.EOL_MIDPOINTS = [
     },
     {
         "sub-category":"Disposal Type B",
-        "name":"Activity 851 | CA",
+        "name":"Activity 1097 | CA",
         "location":"CA",
         "unit":"kilowatt hour",
         "comment":null,
@@ -1011,7 +1011,7 @@ window.EOL_MIDPOINTS = [
         "Photochemical-ozone-formation":"0,0007810984509",
         "Terrestrial-acidification":"0,00007875638168",
         "Water-scarcity":"0,0000204230467",
-        "original_name":"Activity 851"
+        "original_name":"Activity 1097"
     },
     {
         "sub-category":"Disposal Type B",
