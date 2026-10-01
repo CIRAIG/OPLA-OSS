@@ -1,0 +1,35 @@
+name: Add demo to release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Use template datasets
+        run: |
+          mkdir -p ./overwrite/datasets
+          cp ./datasets-templates/*.js ./overwrite/datasets/
+
+      - name: Compile demo
+        run: |
+          chmod +x ./compile-release.sh
+          ./compile-release.sh "demo-${TAG}"
+          mv ./dist/opla.html "./dist/opla-demo-${TAG}.html"
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" "./dist/opla-demo-${TAG}.html" --clobber
