@@ -82,3 +82,54 @@ To create a new release, you can use the automated script like this: `./compile-
 Example: `./compile-release.sh 1.0.0`
 
 You should get a new `./dist/index.html` file, with everything embedded.
+
+# Running the tests
+
+The comparison mode (Results Comparator) is covered by a browser test in `tests/compare/`. It opens the built `dist/opla.html` in headless Chromium and follows the same flow as a user: it builds a project in OPLA, downloads it with **Export project** (`lca_study.json`), drops exported project files on the comparison mode, checks the numbers, exercises every view (scrolling, hiding candidates, sessions, exports) and saves screenshots to `tests/compare/shots/`.
+
+## 1. Install the requirements (once)
+
+You need Python 3 and Playwright with its Chromium build:
+
+```bash
+python3 -m venv tests/.venv
+tests/.venv/bin/pip install playwright
+tests/.venv/bin/playwright install chromium
+```
+
+To use a Chromium already installed on your machine instead, skip the last command and set `CHROMIUM_PATH` when running the test (for example `CHROMIUM_PATH=/usr/bin/chromium`).
+
+## 2. Provide the datasets
+
+The test builds two real OPLA projects using activities from the template datasets, so copy them into the `overwrite` folder:
+
+```bash
+mkdir -p overwrite
+cp -r datasets-templates overwrite/datasets
+```
+
+## 3. Build the test version
+
+```bash
+./compile-release.sh test
+```
+
+## 4. Run the test
+
+```bash
+tests/.venv/bin/python tests/compare/run_test.py
+```
+
+No manual preparation is needed: at the start of the run, the test builds a project in OPLA and exports it with **Export project**. From that `lca_study.json`, `tests/compare/make_candidates.py` writes four comparison candidates to `tests/compare/candidates/` (same file format, scaled results, different names and contributors), plus a few files the comparison must refuse.
+
+To inspect the candidates without running the browser test, run the script on any file exported with **Export project**:
+
+```bash
+python3 tests/compare/make_candidates.py <path/to/lca_study.json>
+```
+
+## 5. Read the results
+
+The last lines show the browser console warnings and errors and the list of failed checks. `ERRORS: []` with exit code `0` means every check passed; otherwise the exit code is `1`. Look at the screenshots in `tests/compare/shots/` to review the UI.
+
+Rebuild (step 3) after every change in `app/` before running the test again. The generated files (`candidates/`, `shots/`, exported projects) are ignored by git.

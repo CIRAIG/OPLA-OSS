@@ -1,19 +1,26 @@
-"""Load the OPLA build (dist/opla.html) in headless Chromium, open the comparison mode, feed the fabricated
-project files (lca_study JSON), screenshot every view and check the numbers. Also checks real OPLA projects
-reaching the comparison through their "Export project" file (left menu and results-step badge).
+"""Load the OPLA build (dist/opla.html) in headless Chromium and follow the user's flow: build a project in OPLA,
+download it with "Export project", then drop exported project files (lca_study JSON) on the comparison mode,
+screenshot every view and check the numbers. Also checks the "Export project" entry points (left menu and
+results-step badge).
+
+The four comparison candidates are fabricated by make_candidates.py from the project exported at the start of
+the run (same file format, scaled results), so no manual preparation is needed.
 
 Prerequisites:
+  overwrite/datasets with the template datasets (cp -r datasets-templates overwrite/datasets)
   ./compile-release.sh test
-  python3 tests/compare/make_candidates.py <seed-folder>
   pip install playwright && playwright install chromium   (or set CHROMIUM_PATH to an existing build)
 """
 import json, math, os, pathlib, sys
 from playwright.sync_api import sync_playwright
 
 HERE = pathlib.Path(__file__).parent
+sys.path.insert(0, str(HERE))
+import make_candidates
+
 ROOT = HERE.parent.parent
 HTML = ROOT / "dist" / "opla.html"
-CAND = HERE / "candidates"
+CAND = make_candidates.OUT
 SHOTS = HERE / "shots"
 SHOTS.mkdir(exist_ok=True)
 
@@ -22,10 +29,16 @@ ALLOWED_HOSTS = ("fonts.googleapis.com", "fonts.gstatic.com")
 COMPARATOR = "Alpine.$data(document.querySelector('[x-data=\"comparator\"]'))"
 GLOBAL = "Alpine.$data(document.querySelector('[x-data=\"global\"]'))"
 
+# Projects built in OPLA; activity IDs come from the template datasets (overwrite/datasets)
+PROJECTS = [
+    {"name": "JSON project 1", "fu": "Protecting one kg of meat", "mass": 2,
+     "materials": ["material-Product 1 from Activity 1 | GLO", "material-Product 2 from Activity 2 | RoW"]},
+    {"name": "JSON project 2", "fu": "Protecting one kg of meat", "mass": 5,
+     "materials": ["material-Product 2 from Activity 2 | RoW"]},
+]
+
 if not HTML.is_file():
     sys.exit(f"{HTML} not found, run ./compile-release.sh test first")
-if not CAND.is_dir():
-    sys.exit(f"{CAND} not found, run tests/compare/make_candidates.py <seed-folder> first")
 
 errors = []
 console = []
@@ -41,10 +54,9 @@ with sync_playwright() as p:
     ctx = browser.new_context(viewport={"width": 1440, "height": 1000})
     ctx.route("**/*", lambda route: route.continue_() if route.request.url.startswith("file://") else route.abort())
     page = ctx.new_page()
-    page.on("console", lambda m: console.append((m.type, m.text)))
-    # Alpine throws "reading 'after'" on duplicate x-for keys; the local EoL dataset has
-    # duplicate activity names, which is a data issue unrelated to the comparison
-    page.on("pageerror", lambda e: "reading 'after'" not in str(e) and errors.append(str(e)))
+    # keep the source URL: the blocked Google Fonts requests are expected and filtered out of the report
+    page.on("console", lambda m: console.append((m.type, m.text, (m.location or {}).get("url", ""))))
+    page.on("pageerror", lambda e: errors.append(str(e)))
     page.on("requestfailed", lambda r: (not allowed(r.url)) and errors.append("network request: " + r.url))
     page.on("request", lambda r: (not allowed(r.url)) and errors.append("external request: " + r.url))
 
@@ -56,10 +68,48 @@ with sync_playwright() as p:
     def comparator(js):
         return page.evaluate(f"() => {{ const d = {COMPARATOR}; {js} }}")
 
+    def build_project(proj):
+        if not page.locator(".welcome-page").is_visible():
+            page.locator(".app__leftNav__logo:visible").first.click()
+        page.wait_for_selector(".welcome-page")
+        page.locator(".welcome-page__choice--new").click()
+        page.wait_for_timeout(300)
+        return page.evaluate(f"""async (p) => {{
+            const g = {GLOBAL};
+            g.goal_projectName = p.name; g.goal_functionalUnit = p.fu;
+            g.goal_productionLocation = 'global'; g.goal_usageLocation = 'canada'; g.goal_isFlexible = 'yes';
+            g.composition_materials = p.materials.map(type => ({{ type, mass: p.mass }}));
+            g.processing_methods = [{{ type: 'processing-Activity 160 | RER', mass: 3 }}];
+            g.eol_methods = [{{ type: 'Activity 835 | CA', mass: 100 }}];
+            await g.$nextTick();
+            return {{
+                mid: g.midPointImpactResults().map(r => [r.impact, parseFloat(r.value)]),
+                end: g.endPointImpactResults().map(r => [r.impact, parseFloat(r.value)]),
+                nContrib: g.getMidPointChartData().series.length,
+                materials: p.materials.map(type => g.getNameFromUUID(type)),
+            }};
+        }}""", proj)
+
     page.goto(HTML.as_uri())
     page.wait_for_timeout(800)
     if page.locator(".init-system-error").count():
         errors.append("OPLA initialisation error: " + page.locator(".init-system-error__error-text").inner_text())
+
+    # ---- seed: build a project in OPLA and download it with "Export project", as a user would;
+    # the four comparison candidates are fabricated from that file
+    build_project(PROJECTS[0])
+    # let OPLA's chart animations finish (resetting a project mid-animation makes ApexCharts throw)
+    page.wait_for_timeout(1500)
+    with page.expect_download() as dl:
+        page.locator("text=Export project").first.click()
+    seed_path = HERE / "lca_study_seed.json"; dl.value.save_as(str(seed_path))
+    try:
+        make_candidates.make(seed_path)
+    except ValueError as e:
+        sys.exit(f"Could not fabricate candidates: {e}")
+    page.locator(".app__leftNav__logo:visible").first.click()
+    page.wait_for_selector(".welcome-page")
+
     enter_compare()
     page.screenshot(path=str(SHOTS / "00_empty.png"), full_page=True)
 
@@ -134,7 +184,7 @@ with sync_playwright() as p:
     if state["materials"][0] != ["LDPE granulate", "LLDPE granulate"]: errors.append("summary materials wrong: " + str(state["materials"][0]))
     notices = " | ".join(state["dropNotices"])
     if len(state["dropNotices"]) != 3: errors.append("expected 3 refused files: " + notices)
-    for needle in ["midpoint_impact_results.csv is not an OPLA project file", "old_lca_study.json has no results", "opla_comparison.json is a saved comparison"]:
+    for needle in ["results.csv is not an OPLA project file", "old_lca_study.json has no results", "opla_comparison.json is a saved comparison"]:
         if needle not in notices: errors.append("missing drop notice: " + needle)
 
     # ---- views
@@ -143,18 +193,73 @@ with sync_playwright() as p:
         page.wait_for_timeout(wait)
         page.screenshot(path=str(SHOTS / name), full_page=True)
 
+    # chip bar above a chart: hide one candidate, then hide all and keep two, then show all
+    def chip_hide_flow(label, count_js, shot):
+        shown = ".compare-hidden:visible .compare-hidden__chip--shown"
+        hidden = ".compare-hidden:visible button.compare-hidden__chip"
+        page.locator(shown).nth(1).locator(".compare-heat__hide").click(); page.wait_for_timeout(900)
+        if page.evaluate(count_js) != 3: errors.append(f"{label}: hide one candidate, {page.evaluate(count_js)} shown")
+        page.locator(".compare-hidden:visible >> text=Hide all candidates").click(); page.wait_for_timeout(600)
+        if not page.locator(".compare-empty:visible", has_text="All candidates are hidden").count() or page.evaluate(count_js) != 0: errors.append(f"{label}: hide all failed")
+        page.locator(hidden).nth(3).click(); page.wait_for_timeout(300)
+        page.locator(hidden).nth(0).click(); page.wait_for_timeout(900)
+        if page.evaluate(count_js) != 2: errors.append(f"{label}: keep two after hide all, {page.evaluate(count_js)} shown")
+        page.screenshot(path=str(SHOTS / shot), full_page=True)
+        page.locator(".compare-hidden:visible >> text=Show all").click(); page.wait_for_timeout(900)
+        if page.evaluate(count_js) != 4: errors.append(f"{label}: show all failed")
+
     go("relative", "02_relative_columns.png")
+    chip_hide_flow("relative", "() => document.querySelectorAll('#chart-relative .apexcharts-series[seriesName]').length", "02b_relative_keep_two.png")
     comparator("d.relLayout = 'rows'; d.afterChange();")
     page.wait_for_timeout(900); page.screenshot(path=str(SHOTS / "03_relative_rows.png"), full_page=True)
     comparator("d.relLayout = 'columns'; d.relLevel = 'endpoint'; d.referenceId = String(d.candidates[0].id); d.afterChange();")
     page.wait_for_timeout(900); page.screenshot(path=str(SHOTS / "04_relative_endpoint_refA.png"), full_page=True)
     comparator("d.relLevel = 'midpoint'; d.afterChange();")
     go("absolute", "05_absolute.png")
+    # all three absolute charts must show the same candidates (-1 if they disagree)
+    chip_hide_flow("absolute", "() => { const n = ['chart-absolute', 'chart-abs-end-0', 'chart-abs-end-1'].map(id => document.querySelectorAll('#' + id + ' .apexcharts-xaxis-texts-g text').length); return n.every(x => x === n[0]) ? n[0] : -1; }", "05b_absolute_keep_two.png")
     go("radar", "06_radar.png")
+    chip_hide_flow("radar", "() => document.querySelectorAll('#chart-radar .apexcharts-series[seriesName]').length", "06b_radar_keep_two.png")
     go("heatmap", "07_heatmap.png")
     page.locator(".compare-heat__head--cand").nth(3).click(); page.wait_for_timeout(300)
     page.screenshot(path=str(SHOTS / "08_heatmap_sorted.png"), full_page=True)
+    # hide two columns: they leave the table (sort cleared if hidden), a chip restores each one
+    chips = ".compare-hidden:visible button.compare-hidden__chip"
+    page.locator(".compare-heat__head--cand").nth(3).locator(".compare-heat__hide").click(); page.wait_for_timeout(200)
+    page.locator(".compare-heat__head--cand").nth(0).locator(".compare-heat__hide").click(); page.wait_for_timeout(300)
+    heat = page.evaluate("() => ({ heads: document.querySelectorAll('.compare-heat__head--cand').length, cells: document.querySelectorAll('.compare-heat__table tbody tr')[1].querySelectorAll('.compare-heat__cell--value').length })")
+    heat["chips"] = page.locator(chips).count()
+    if heat != {"heads": 2, "chips": 2, "cells": 2} or comparator("return d.heatSort;") is not None: errors.append(f"heatmap hide columns: {heat}")
+    page.screenshot(path=str(SHOTS / "08b_heatmap_hidden.png"), full_page=True)
+    page.locator(chips).first.click(); page.wait_for_timeout(200)
+    if page.locator(".compare-heat__head--cand").count() != 3: errors.append("heatmap: restoring a column failed")
+    page.locator(chips).first.click()
+    page.wait_for_timeout(200)
+    if page.locator(".compare-heat__head--cand").count() != 4 or page.locator(chips).count(): errors.append("heatmap: columns not all restored")
+    # hide all, then pick two to keep
+    page.locator(".compare-hidden:visible >> text=Hide all columns").click(); page.wait_for_timeout(200)
+    if page.locator(".compare-heat__table").first.is_visible() or page.locator(chips).count() != 4 or not page.locator("text=All columns are hidden").is_visible(): errors.append("heatmap: hide all columns failed")
+    page.locator(chips).nth(2).click(); page.wait_for_timeout(200)
+    page.locator(chips).nth(0).click(); page.wait_for_timeout(300)
+    if page.locator(".compare-heat__head--cand").count() != 2 or page.locator(chips).count() != 2: errors.append("heatmap: keeping two after hide all failed")
+    page.screenshot(path=str(SHOTS / "08c_heatmap_keep_two.png"), full_page=True)
+    page.locator(".compare-hidden:visible >> text=Show all").click(); page.wait_for_timeout(200)
+    if page.locator(".compare-heat__head--cand").count() != 4: errors.append("heatmap: show all failed")
     go("stacked", "09_stacked.png")
+    # stacked: hiding a candidate removes it from both the chart and the table; hide all, then keep two
+    stack_state = "() => ({ bars: document.querySelectorAll('#chart-stacked .apexcharts-xaxis-texts-g text').length, heads: document.querySelectorAll('.compare-heat--scrollable .compare-heat__head').length - 1, chips: document.querySelectorAll('.compare-hidden:not([style*=\"display: none\"]) button.compare-hidden__chip').length })"
+    page.locator(".compare-heat--scrollable .compare-heat__hide").nth(1).click(); page.wait_for_timeout(900)
+    st = page.evaluate(stack_state)
+    if st != {"bars": 3, "heads": 3, "chips": 1}: errors.append(f"stacked: hide one candidate {st}")
+    page.locator(".compare-hidden:visible >> text=Hide all candidates").click(); page.wait_for_timeout(600)
+    if not page.locator(".compare-empty:visible", has_text="All candidates are hidden").count() or page.evaluate(stack_state)["bars"] != 0: errors.append("stacked: hide all failed")
+    page.locator(".compare-hidden:visible button.compare-hidden__chip").nth(2).click(); page.wait_for_timeout(300)
+    page.locator(".compare-hidden:visible button.compare-hidden__chip").nth(0).click(); page.wait_for_timeout(900)
+    st = page.evaluate(stack_state)
+    if st["bars"] != 2 or st["chips"] != 2: errors.append(f"stacked: keep two after hide all {st}")
+    page.screenshot(path=str(SHOTS / "09b_stacked_keep_two.png"), full_page=True)
+    page.locator(".compare-hidden:visible >> text=Show all").click(); page.wait_for_timeout(900)
+    if page.evaluate(stack_state)["bars"] != 4: errors.append("stacked: show all failed")
     comparator("d.stackMode = 'percent'; d.afterChange();")
     page.wait_for_timeout(900); page.screenshot(path=str(SHOTS / "10_stacked_percent.png"), full_page=True)
     comparator("d.stackCategory = 'endpoint::Total human health'; d.stackMode = 'absolute'; d.afterChange();")
@@ -246,12 +351,35 @@ with sync_playwright() as p:
     page.wait_for_timeout(1200)
     box = page.evaluate(rel_box)
     if box["sw"] <= box["cw"]: errors.append(f"50 candidates, columns: relative chart does not scroll horizontally {box}")
-    page.locator(".compare-chart--scrollable").screenshot(path=str(SHOTS / "15c_fifty_relative_columns.png"))
+    page.locator(".compare-chart--scrollable").first.screenshot(path=str(SHOTS / "15c_fifty_relative_columns.png"))
     comparator("d.relLayout = 'rows'; d.afterChange();")
     page.wait_for_timeout(1200)
     box = page.evaluate(rel_box)
     if box["sh"] <= box["ch"] or box["ch"] > box["vh"] * 0.76: errors.append(f"50 candidates, rows: relative chart does not scroll vertically {box}")
-    page.locator(".compare-chart--scrollable").screenshot(path=str(SHOTS / "15d_fifty_relative_rows.png"))
+    page.locator(".compare-chart--scrollable").first.screenshot(path=str(SHOTS / "15d_fifty_relative_rows.png"))
+    # ---- 50 projects: the absolute charts scroll horizontally and label every candidate
+    comparator("d.setView('absolute');")
+    page.wait_for_timeout(1500)
+    abs_box = page.evaluate("""() => ['chart-absolute', 'chart-abs-end-0', 'chart-abs-end-1'].map(id => {
+        const el = document.getElementById(id), b = el && el.closest('.compare-chart--scrollable');
+        return { id, sw: b ? b.scrollWidth : 0, cw: b ? b.clientWidth : 0,
+                 labels: el ? el.querySelectorAll('.apexcharts-xaxis-texts-g text').length : 0 };
+    })""")
+    for b in abs_box:
+        if b["sw"] <= b["cw"] or b["labels"] != 50: errors.append(f"50 candidates: absolute chart not scrollable or missing labels {b}")
+    page.locator("#chart-absolute").screenshot(path=str(SHOTS / "15e_fifty_absolute.png"))
+    # ---- 50 projects: the stacked chart and its table scroll inside the card
+    comparator("d.setView('stacked');")
+    page.wait_for_timeout(1500)
+    stk = page.evaluate("""() => {
+        const el = document.getElementById('chart-stacked'), b = el.closest('.compare-chart--scrollable'), t = document.querySelector('.compare-heat--scrollable');
+        return { sw: b.scrollWidth, cw: b.clientWidth, labels: el.querySelectorAll('.apexcharts-xaxis-texts-g text').length,
+                 tsw: t ? t.scrollWidth : 0, tcw: t ? t.clientWidth : 0 };
+    }""")
+    if stk["sw"] <= stk["cw"] or stk["labels"] != 50 or stk["tsw"] <= stk["tcw"]: errors.append(f"50 candidates: stacked chart/table not scrollable or missing labels {stk}")
+    page.locator("#chart-stacked").screenshot(path=str(SHOTS / "15f_fifty_stacked.png"))
+    comparator("d.setView('relative');")
+    page.wait_for_timeout(600)
     comparator("d.candidates = d.candidates.slice(0, 3); d.relLayout = 'columns'; d.afterChange();")
     page.wait_for_timeout(1200)
     box = page.evaluate(rel_box)
@@ -259,34 +387,6 @@ with sync_playwright() as p:
     comparator("d.setView('candidates');")
 
     # ---- real OPLA projects -> comparison, through the exported JSON only
-    # IDs come from the local overwrite/ datasets
-    PROJECTS = [
-        {"name": "JSON project 1", "fu": "Protecting one kg of meat", "mass": 2,
-         "materials": ["material-Product 1 from Activity 1 | GLO", "material-Product 2 from Activity 2 | RoW"]},
-        {"name": "JSON project 2", "fu": "Protecting one kg of meat", "mass": 5,
-         "materials": ["material-Product 2 from Activity 2 | RoW"]},
-    ]
-    def build_project(proj):
-        page.locator(".app__leftNav__logo:visible").first.click()
-        page.wait_for_selector(".welcome-page")
-        page.locator(".welcome-page__choice--new").click()
-        page.wait_for_timeout(300)
-        return page.evaluate(f"""async (p) => {{
-            const g = {GLOBAL};
-            g.goal_projectName = p.name; g.goal_functionalUnit = p.fu;
-            g.goal_productionLocation = 'global'; g.goal_usageLocation = 'canada'; g.goal_isFlexible = 'yes';
-            g.composition_materials = p.materials.map(type => ({{ type, mass: p.mass }}));
-            g.processing_methods = [{{ type: 'processing-Activity 160 | RER', mass: 3 }}];
-            g.eol_methods = [{{ type: 'Activity 835 | CA', mass: 100 }}];
-            await g.$nextTick();
-            return {{
-                mid: g.midPointImpactResults().map(r => [r.impact, parseFloat(r.value)]),
-                end: g.endPointImpactResults().map(r => [r.impact, parseFloat(r.value)]),
-                nContrib: g.getMidPointChartData().series.length,
-                materials: p.materials.map(type => g.getNameFromUUID(type)),
-            }};
-        }}""", proj)
-
     def check_candidate(label, cand, proj, expected):
         if cand["name"] != proj["name"]: errors.append(f"{label}: name {cand['name']!r}")
         if cand["fu"] != proj["fu"]: errors.append(f"{label}: functional unit {cand['fu']!r}")
@@ -364,6 +464,6 @@ with sync_playwright() as p:
 
     browser.close()
 
-print("\nCONSOLE:", [c for c in console if c[0] in ("error", "warning") and not any(h in c[1] for h in ALLOWED_HOSTS)][:20])
+print("\nCONSOLE:", [(t, text) for t, text, url in console if t in ("error", "warning") and not any(h in text or h in url for h in ALLOWED_HOSTS)][:20])
 print("ERRORS:", errors)
 sys.exit(1 if errors else 0)
