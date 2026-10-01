@@ -205,6 +205,11 @@ document.addEventListener('alpine:init', () => {
         stackMode: 'absolute',
         radarHidden: [],
         heatSort: null,
+        heatHidden: [],
+        stackHidden: [],
+        radarCandHidden: [],
+        relHidden: [],
+        absHidden: [],
         // ui
         dragOver: false,
         expandedIds: [],
@@ -247,6 +252,11 @@ document.addEventListener('alpine:init', () => {
             this.candidates = this.candidates.filter(x => x.id !== c.id);
             if (String(this.referenceId) === String(c.id)) this.referenceId = 'worst';
             if (this.heatSort === c.id) this.heatSort = null;
+            this.heatHidden = this.heatHidden.filter(id => id !== c.id);
+            this.stackHidden = this.stackHidden.filter(id => id !== c.id);
+            this.radarCandHidden = this.radarCandHidden.filter(id => id !== c.id);
+            this.relHidden = this.relHidden.filter(id => id !== c.id);
+            this.absHidden = this.absHidden.filter(id => id !== c.id);
             this.afterChange();
         },
         move(c, dir) {
@@ -358,9 +368,9 @@ document.addEventListener('alpine:init', () => {
             if (idx < 0) return null;
             return sh.contributors.map(k => ({ name: k.name, share: k.data[idx], value: total * k.data[idx] / 100 }));
         },
-        contributorNames(level, cat) {
+        contributorNames(level, cat, act = this.active()) {
             const out = [];
-            for (const c of this.active()) for (const b of (this.breakdownFor(c, level, cat) || [])) if (!out.includes(b.name)) out.push(b.name);
+            for (const c of act) for (const b of (this.breakdownFor(c, level, cat) || [])) if (!out.includes(b.name)) out.push(b.name);
             return out;
         },
 
@@ -402,9 +412,9 @@ document.addEventListener('alpine:init', () => {
             return n >= 2 ? 'ready' : (n === 1 ? 'needs 2+ candidates' : 'needs candidates');
         },
         viewStatusClass(id) { const s = this.viewStatus(id); return (s === 'ready' || /loaded|with breakdown/.test(s)) ? 'app__leftNav__steps__step__status--completed' : ''; },
-        summaryWins() {
+        summaryWins(act = this.active()) {
             // number of midpoint categories in which each candidate has the lowest value
-            const act = this.active(), wins = {};
+            const wins = {};
             act.forEach(c => wins[c.id] = 0);
             let counted = 0;
             for (const cat of this.categories('midpoint')) {
@@ -435,7 +445,7 @@ document.addEventListener('alpine:init', () => {
 
         /* ----- View A: relative ----- */
         async renderRelative() {
-            const act = this.active(), level = this.relLevel;
+            const act = this.visibleCands('relHidden'), level = this.relLevel;
             const cats = this.categories(level);
             const el = document.getElementById('chart-relative');
             if (!el) return;
@@ -478,11 +488,14 @@ document.addEventListener('alpine:init', () => {
 
         /* ----- View B: absolute ----- */
         async renderAbsolute() {
-            const act = this.active();
+            const act = this.visibleCands('absHidden');
             const main = document.getElementById('chart-absolute');
             if (!main) return;
             const sel = this.splitKey(this.absCategory);
             if (!act.length || !sel) { ['chart-absolute', 'chart-abs-end-0', 'chart-abs-end-1'].forEach(id => { destroyChart(id); const e = document.getElementById(id); if (e) e.innerHTML = ''; }); return; }
+            // one readable slot per candidate (bar + its data label); a chart wider than the card scrolls horizontally inside it
+            const crowded = act.length > 8;
+            const minWidth = crowded ? act.length * 64 + 120 : 0;
             const build = (level, cat, height, filename, showTitle) => {
                 const unit = this.unitOf(level, cat);
                 const values = act.map(c => this.getValue(c, level, cat));
@@ -493,20 +506,23 @@ document.addEventListener('alpine:init', () => {
                     plotOptions: { bar: { distributed: true, columnWidth: act.length > 6 ? '70%' : '45%', borderRadius: 3, borderRadiusApplication: 'end', dataLabels: { position: 'top' } } },
                     dataLabels: { enabled: true, formatter: v => v === null ? 'n/a' : fmtSci(v), offsetY: -18, style: { fontSize: '11px', colors: ['#333'] }, background: { enabled: false } },
                     legend: { show: false },
-                    xaxis: { categories: act.map(c => c.name), labels: { trim: true, rotate: -30, rotateAlways: false, style: { fontSize: '12px' } } },
+                    xaxis: { categories: act.map(c => c.name), labels: { trim: true, rotate: -45, rotateAlways: crowded, hideOverlappingLabels: false, maxHeight: 140, style: { fontSize: '12px' }, formatter: v => shorten(v, 28) } },
                     yaxis: { title: { text: unit }, labels: { formatter: v => fmtSmart(v) }, forceNiceScale: true },
                     grid: { borderColor: '#eee' },
-                    tooltip: { y: { formatter: v => v === null ? 'n/a' : fmtSci(v) + ' ' + unit + ' (' + fmtSmart(v) + ')' } }
+                    tooltip: {
+                        y: { formatter: v => v === null ? 'n/a' : fmtSci(v) + ' ' + unit + ' (' + fmtSmart(v) + ')' },
+                        x: { formatter: (v, o) => (act[o.dataPointIndex] || {}).name || v }
+                    }
                 };
                 if (showTitle) opts.title = { text: cat, style: { fontSize: '14px', fontWeight: 600 } };
                 return opts;
             };
-            await mountChart('chart-absolute', build(sel.level, sel.cat, 420, 'opla_absolute', true));
+            await mountChart('chart-absolute', build(sel.level, sel.cat, crowded ? 480 : 420, 'opla_absolute', true), minWidth);
             const ends = this.categories('endpoint');
             for (let i = 0; i < 2; i++) {
                 const id = 'chart-abs-end-' + i, e = document.getElementById(id);
                 if (!e) continue;
-                if (ends[i]) await mountChart(id, build('endpoint', ends[i], 320, 'opla_endpoint_' + i, true));
+                if (ends[i]) await mountChart(id, build('endpoint', ends[i], crowded ? 380 : 320, 'opla_endpoint_' + i, true), minWidth);
                 else { destroyChart(id); e.innerHTML = ''; }
             }
         },
@@ -515,8 +531,9 @@ document.addEventListener('alpine:init', () => {
         radarCategories() { return this.categories('midpoint').filter(c => !this.radarHidden.includes(c)); },
         toggleRadar(cat) { this.radarHidden = this.radarHidden.includes(cat) ? this.radarHidden.filter(c => c !== cat) : [...this.radarHidden, cat]; this.afterChange(); },
         radarAll(show) { this.radarHidden = show ? [] : this.categories('midpoint').slice(); this.afterChange(); },
+        radarCandidates() { return this.visibleCands('radarCandHidden'); },
         async renderRadar() {
-            const act = this.active(), cats = this.radarCategories();
+            const act = this.radarCandidates(), cats = this.radarCategories();
             const el = document.getElementById('chart-radar');
             if (!el) return;
             if (act.length < 1 || cats.length < 3) { destroyChart('chart-radar'); el.innerHTML = ''; return; }
@@ -535,9 +552,28 @@ document.addEventListener('alpine:init', () => {
             await mountChart('chart-radar', options);
         },
 
+        /* ----- Candidate hiding: each view keeps its own list of hidden candidate ids ----- */
+        // key is 'relHidden', 'absHidden', 'radarCandHidden', 'heatHidden' or 'stackHidden'
+        visibleCands(key) { return this.active().filter(c => !this[key].includes(c.id)); },
+        hiddenCands(key) { return this.active().filter(c => this[key].includes(c.id)); },
+        hideColumn(key, c) {
+            if (this.visibleCands(key).length <= 1) return;
+            this.setHidden(key, [...this[key], c.id]);
+        },
+        showColumn(key, c) { this.setHidden(key, this[key].filter(id => id !== c.id)); },
+        hideAllColumns(key) { this.setHidden(key, this.active().map(c => c.id)); },
+        showAllColumns(key) { this.setHidden(key, []); },
+        setHidden(key, ids) {
+            this[key] = ids;
+            if (key === 'heatHidden' && ids.includes(this.heatSort)) this.heatSort = null;
+            if (key !== 'heatHidden') this.afterChange();
+        },
+
         /* ----- View D: heatmap table ----- */
+        // hidden columns are left out of the colour scale and the "lowest in" count, so the visible ones compare side by side
+        heatCandidates() { return this.visibleCands('heatHidden'); },
         heatRows(level) {
-            const act = this.active();
+            const act = this.heatCandidates();
             const rows = this.categories(level).map(cat => {
                 const vals = act.map(c => this.getValue(c, level, cat));
                 const finite = vals.filter(v => v !== null);
@@ -570,15 +606,19 @@ document.addEventListener('alpine:init', () => {
         sortBy(c) { this.heatSort = this.heatSort === c.id ? null : c.id; },
 
         /* ----- View E: stacked contributions ----- */
+        stackCandidates() { return this.visibleCands('stackHidden'); },
         async renderStacked() {
-            const act = this.active();
+            const act = this.stackCandidates();
             const el = document.getElementById('chart-stacked');
             if (!el) return;
             const sel = this.splitKey(this.stackCategory);
             if (!act.length || !sel) { destroyChart('chart-stacked'); el.innerHTML = ''; return; }
             const { level, cat } = sel;
             const unit = this.unitOf(level, cat);
-            const names = this.contributorNames(level, cat);
+            const names = this.contributorNames(level, cat, act);
+            // one readable slot per candidate; a chart wider than the card scrolls horizontally inside it
+            const crowded = act.length > 8;
+            const minWidth = crowded ? act.length * 56 + 160 : 0;
             const breakdowns = act.map(c => this.breakdownFor(c, level, cat));
             const series = names.map((n, k) => ({
                 name: n, color: CONTRIBUTOR_PALETTE[k % CONTRIBUTOR_PALETTE.length],
@@ -598,7 +638,7 @@ document.addEventListener('alpine:init', () => {
             const nMin = yMin < 0 ? Math.floor(yMin * 1.08 / step) * step : 0;
             const yRange = percent ? {} : { min: nMin, max: nMax || step, tickAmount: Math.round(((nMax || step) - nMin) / step), forceNiceScale: false };
             const options = {
-                chart: baseChart('bar', 500, 'opla_stacked', { stacked: true, stackType: percent ? '100%' : 'normal' }),
+                chart: baseChart('bar', crowded ? 560 : 500, 'opla_stacked', { stacked: true, stackType: percent ? '100%' : 'normal' }),
                 series, colors: series.map(s => s.color),
                 plotOptions: { bar: { columnWidth: act.length > 6 ? '70%' : '50%', borderRadius: 2, borderRadiusApplication: 'end', borderRadiusWhenStacked: 'last' } },
                 stroke: { show: true, width: 2, colors: ['#fff'] },
@@ -612,22 +652,22 @@ document.addEventListener('alpine:init', () => {
                         return percent ? p.toFixed(0) + '%' : fmtSmart(v);
                     }
                 },
-                xaxis: { categories: act.map(c => c.name), labels: { trim: true, style: { fontSize: '12px' } } },
+                xaxis: { categories: act.map(c => c.name), labels: { trim: true, rotate: -45, rotateAlways: crowded, hideOverlappingLabels: false, maxHeight: 140, style: { fontSize: '12px' }, formatter: v => shorten(v, 28) } },
                 yaxis: Object.assign({ title: { text: percent ? 'Share of total (%)' : unit }, labels: { formatter: v => percent ? Number(v).toFixed(0) + '%' : fmtSmart(v) } }, yRange),
                 legend: { position: 'bottom', fontSize: '12px' },
                 grid: { borderColor: '#eee' },
-                tooltip: { shared: false, intersect: true, y: { formatter: (v, o) => {
+                tooltip: { shared: false, intersect: true, x: { formatter: (v, o) => (act[o.dataPointIndex] || {}).name || v }, y: { formatter: (v, o) => {
                     const sp = o.w.globals.seriesPercent; const p = sp && sp[o.seriesIndex] ? sp[o.seriesIndex][o.dataPointIndex] : null;
                     return fmtSci(v) + ' ' + unit + (Number.isFinite(p) ? ' (' + p.toFixed(1) + '% of total)' : '');
                 } } }
             };
-            await mountChart('chart-stacked', options);
+            await mountChart('chart-stacked', options, minWidth);
         },
         stackedTable() {
             const sel = this.splitKey(this.stackCategory);
             if (!sel) return null;
-            const act = this.active();
-            const names = this.contributorNames(sel.level, sel.cat);
+            const act = this.stackCandidates();
+            const names = this.contributorNames(sel.level, sel.cat, act);
             return { unit: this.unitOf(sel.level, sel.cat), names, rows: act.map(c => ({ cand: c, total: this.getValue(c, sel.level, sel.cat), b: this.breakdownFor(c, sel.level, sel.cat) })) };
         },
 
@@ -635,7 +675,7 @@ document.addEventListener('alpine:init', () => {
         saveSession() {
             const data = {
                 app: 'opla-compare', version: APP_VERSION, saved: new Date().toISOString(),
-                settings: { referenceId: this.referenceId, relLevel: this.relLevel, relLayout: this.relLayout, absCategory: this.absCategory, stackCategory: this.stackCategory, stackMode: this.stackMode, radarHidden: this.radarHidden, view: this.view },
+                settings: { referenceId: this.referenceId, relLevel: this.relLevel, relLayout: this.relLayout, absCategory: this.absCategory, stackCategory: this.stackCategory, stackMode: this.stackMode, radarHidden: this.radarHidden, heatHidden: this.heatHidden, stackHidden: this.stackHidden, radarCandHidden: this.radarCandHidden, relHidden: this.relHidden, absHidden: this.absHidden, view: this.view },
                 nextId: this.nextId,
                 candidates: this.candidates.map(c => JSON.parse(JSON.stringify(c)))
             };
@@ -652,14 +692,14 @@ document.addEventListener('alpine:init', () => {
                     // older sessions stored `meta`, `files` and `notices`; they are dropped
                     this.candidates = data.candidates.map(({ meta, files, notices, ...c }) => ({ summary: null, midTotals: null, endTotals: null, midShares: null, endShares: null, active: true, ...c }));
                     this.nextId = Math.max(data.nextId || 1, ...this.candidates.map(c => c.id + 1), 1);
-                    Object.assign(this, data.settings || {});
+                    Object.assign(this, { heatHidden: [], stackHidden: [], radarCandHidden: [], relHidden: [], absHidden: [] }, data.settings || {});
                     if (!this.views.some(v => v.id === this.view)) this.view = 'candidates';
                     this.afterChange();
                 } catch (err) { this.modal = { title: 'Could not load comparison', text: String(err.message || err) }; }
             };
             input.click();
         },
-        clearAll() { this.modal = { title: 'Remove all candidates?', text: 'This clears every candidate from the comparison. Save the comparison first if you want to come back to it.', confirm: () => { this.candidates = []; this.referenceId = 'worst'; this.heatSort = null; this.modal = null; this.afterChange(); } }; },
+        clearAll() { this.modal = { title: 'Remove all candidates?', text: 'This clears every candidate from the comparison. Save the comparison first if you want to come back to it.', confirm: () => { this.candidates = []; this.referenceId = 'worst'; this.heatSort = null; this.heatHidden = []; this.stackHidden = []; this.radarCandHidden = []; this.relHidden = []; this.absHidden = []; this.modal = null; this.afterChange(); } }; },
 
         /* ---------------- exports ---------------- */
         exportTableCSV() {

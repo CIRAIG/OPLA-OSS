@@ -1041,19 +1041,32 @@
                         <!-- ===== VIEW A: RELATIVE ===== -->
                         <div class="card card--compare" x-show="view === 'relative'">
                             <h2 class="card__title">Relative comparison</h2>
-                            <p class="card__comment">Every impact category on one axis. Each candidate is expressed as a percentage of the reference (<span x-text="referenceLabel()"></span>), so a bar below the dashed line means a lower impact than the reference in that category. Hover a bar for the absolute value.</p>
+                            <p class="card__comment">Every impact category on one axis. Each candidate is expressed as a percentage of the reference (<span x-text="referenceLabel()"></span>), so a bar below the dashed line means a lower impact than the reference in that category. Hover a bar for the absolute value. Click &times; on a candidate to hide it from the chart; to keep only a few, hide all candidates, then click the ones to show again.</p>
                             <div class="compare-controls">
                                 <span class="compare-seg"><button class="compare-seg__button" :class="{'compare-seg__button--active': relLevel === 'midpoint'}" @click="relLevel = 'midpoint'; afterChange()">Midpoints</button><button class="compare-seg__button" :class="{'compare-seg__button--active': relLevel === 'endpoint'}" @click="relLevel = 'endpoint'; afterChange()">Endpoints</button></span>
                                 <span class="compare-seg"><button class="compare-seg__button" :class="{'compare-seg__button--active': relLayout === 'columns'}" @click="relLayout = 'columns'; afterChange()">Columns</button><button class="compare-seg__button" :class="{'compare-seg__button--active': relLayout === 'rows'}" @click="relLayout = 'rows'; afterChange()">Rows</button></span>
                             </div>
+                            <div class="compare-hidden" x-show="active().length >= 2">
+                                <button type="button" class="compare-link-button" x-show="visibleCands('relHidden').length" @click="hideAllColumns('relHidden')">Hide all candidates</button>
+                                <span class="compare-hidden__label" x-show="visibleCands('relHidden').length">Shown:</span>
+                                <template x-for="c in visibleCands('relHidden')" :key="c.id">
+                                    <span class="compare-hidden__chip compare-hidden__chip--shown"><span class="compare-context__dot" :style="'background:' + c.color"></span><span x-text="c.name"></span><button type="button" class="compare-heat__hide" x-show="visibleCands('relHidden').length > 1" :title="'Hide ' + c.name" :aria-label="'Hide ' + c.name" @click="hideColumn('relHidden', c)">&times;</button></span>
+                                </template>
+                                <span class="compare-hidden__label" x-show="hiddenCands('relHidden').length">Hidden:</span>
+                                <template x-for="c in hiddenCands('relHidden')" :key="c.id">
+                                    <button type="button" class="compare-hidden__chip" :title="'Show ' + c.name + ' again'" @click="showColumn('relHidden', c)"><span class="compare-context__dot" :style="'background:' + c.color"></span><span x-text="c.name"></span><span class="compare-hidden__plus">+</span></button>
+                                </template>
+                                <button type="button" class="compare-link-button" x-show="hiddenCands('relHidden').length > 1" @click="showAllColumns('relHidden')">Show all</button>
+                            </div>
                             <div class="compare-empty" x-show="active().length < 1">Load at least one candidate to draw this chart (two or more to compare).</div>
+                            <div class="compare-empty" x-show="active().length && !visibleCands('relHidden').length">All candidates are hidden. Click the candidates above to show the ones you want to compare.</div>
                             <div class="compare-chart compare-chart--scrollable"><div id="chart-relative"></div></div>
                         </div>
 
                         <!-- ===== VIEW B: ABSOLUTE ===== -->
                         <div class="card card--compare" x-show="view === 'absolute'">
                             <h2 class="card__title">Absolute values per category</h2>
-                            <p class="card__comment">One category at a time, in its own unit, exactly as OPLA reports it (three significant digits, scientific notation). The two endpoint indicators are always shown underneath.</p>
+                            <p class="card__comment">One category at a time, in its own unit, exactly as OPLA reports it (three significant digits, scientific notation). The two endpoint indicators are always shown underneath. Click &times; on a candidate to hide it from these charts; to keep only a few, hide all candidates, then click the ones to show again.</p>
                             <div class="compare-controls">
                                 <label class="compare-controls__label">Category:
                                     <select class="compare-controls__select" x-model="absCategory" data-sync="absCategory" @change="afterChange()">
@@ -1065,19 +1078,44 @@
                                     </select>
                                 </label>
                             </div>
+                            <div class="compare-hidden" x-show="active().length >= 2">
+                                <button type="button" class="compare-link-button" x-show="visibleCands('absHidden').length" @click="hideAllColumns('absHidden')">Hide all candidates</button>
+                                <span class="compare-hidden__label" x-show="visibleCands('absHidden').length">Shown:</span>
+                                <template x-for="c in visibleCands('absHidden')" :key="c.id">
+                                    <span class="compare-hidden__chip compare-hidden__chip--shown"><span class="compare-context__dot" :style="'background:' + c.color"></span><span x-text="c.name"></span><button type="button" class="compare-heat__hide" x-show="visibleCands('absHidden').length > 1" :title="'Hide ' + c.name" :aria-label="'Hide ' + c.name" @click="hideColumn('absHidden', c)">&times;</button></span>
+                                </template>
+                                <span class="compare-hidden__label" x-show="hiddenCands('absHidden').length">Hidden:</span>
+                                <template x-for="c in hiddenCands('absHidden')" :key="c.id">
+                                    <button type="button" class="compare-hidden__chip" :title="'Show ' + c.name + ' again'" @click="showColumn('absHidden', c)"><span class="compare-context__dot" :style="'background:' + c.color"></span><span x-text="c.name"></span><span class="compare-hidden__plus">+</span></button>
+                                </template>
+                                <button type="button" class="compare-link-button" x-show="hiddenCands('absHidden').length > 1" @click="showAllColumns('absHidden')">Show all</button>
+                            </div>
                             <div class="compare-empty" x-show="active().length < 1">Load at least one candidate to draw this chart.</div>
-                            <div class="compare-chart"><div id="chart-absolute"></div></div>
+                            <div class="compare-empty" x-show="active().length && !visibleCands('absHidden').length">All candidates are hidden. Click the candidates above to show the ones you want to compare.</div>
+                            <div class="compare-chart compare-chart--scrollable"><div id="chart-absolute"></div></div>
                             <div class="compare-subtitle" x-show="categories('endpoint').length">Endpoint indicators</div>
                             <div class="compare-charts">
-                                <div class="compare-charts__item"><div id="chart-abs-end-0"></div></div>
-                                <div class="compare-charts__item"><div id="chart-abs-end-1"></div></div>
+                                <div class="compare-charts__item"><div class="compare-chart compare-chart--scrollable"><div id="chart-abs-end-0"></div></div></div>
+                                <div class="compare-charts__item"><div class="compare-chart compare-chart--scrollable"><div id="chart-abs-end-1"></div></div></div>
                             </div>
                         </div>
 
                         <!-- ===== VIEW C: RADAR ===== -->
                         <div class="card card--compare" x-show="view === 'radar'">
                             <h2 class="card__title">Radar profile</h2>
-                            <p class="card__comment">The footprint of every candidate across all midpoint categories, normalised to the reference (<span x-text="referenceLabel()"></span> = 100%). A smaller polygon means a lower overall impact; hide categories below to focus the profile.</p>
+                            <p class="card__comment">The footprint of every candidate across all midpoint categories, normalised to the reference (<span x-text="referenceLabel()"></span> = 100%). A smaller polygon means a lower overall impact; hide categories below to focus the profile. Click &times; on a candidate to hide its polygon; to keep only a few, hide all candidates, then click the ones to show again.</p>
+                            <div class="compare-hidden" x-show="active().length >= 2">
+                                <button type="button" class="compare-link-button" x-show="radarCandidates().length" @click="hideAllColumns('radarCandHidden')">Hide all candidates</button>
+                                <span class="compare-hidden__label" x-show="radarCandidates().length">Shown:</span>
+                                <template x-for="c in radarCandidates()" :key="c.id">
+                                    <span class="compare-hidden__chip compare-hidden__chip--shown"><span class="compare-context__dot" :style="'background:' + c.color"></span><span x-text="c.name"></span><button type="button" class="compare-heat__hide" x-show="radarCandidates().length > 1" :title="'Hide ' + c.name" :aria-label="'Hide ' + c.name" @click="hideColumn('radarCandHidden', c)">&times;</button></span>
+                                </template>
+                                <span class="compare-hidden__label" x-show="hiddenCands('radarCandHidden').length">Hidden:</span>
+                                <template x-for="c in hiddenCands('radarCandHidden')" :key="c.id">
+                                    <button type="button" class="compare-hidden__chip" :title="'Show ' + c.name + ' again'" @click="showColumn('radarCandHidden', c)"><span class="compare-context__dot" :style="'background:' + c.color"></span><span x-text="c.name"></span><span class="compare-hidden__plus">+</span></button>
+                                </template>
+                                <button type="button" class="compare-link-button" x-show="hiddenCands('radarCandHidden').length > 1" @click="showAllColumns('radarCandHidden')">Show all</button>
+                            </div>
                             <div class="compare-checks" x-show="categories('midpoint').length">
                                 <template x-for="cat in categories('midpoint')" :key="cat">
                                     <label class="compare-checks__label"><input type="checkbox" class="compare-checkbox" :checked="!radarHidden.includes(cat)" @change="toggleRadar(cat)"> <span x-text="cat"></span></label>
@@ -1086,21 +1124,31 @@
                                 <button class="compare-link-button" @click="radarAll(false)">none</button>
                             </div>
                             <div class="compare-empty" x-show="active().length < 1 || radarCategories().length < 3">Needs at least one candidate and three visible categories.</div>
+                            <div class="compare-empty" x-show="active().length && !radarCandidates().length">All candidates are hidden. Click the candidates above to show the ones you want to compare.</div>
                             <div class="compare-chart"><div id="chart-radar"></div></div>
                         </div>
 
                         <!-- ===== VIEW D: HEATMAP ===== -->
                         <div class="card card--compare" x-show="view === 'heatmap'">
                             <h2 class="card__title">Heatmap table</h2>
-                            <p class="card__comment">All numbers in one table. Within each category, the lowest value is tinted green and the highest red; the percentage is relative to the reference (<span x-text="referenceLabel()"></span>). Click a candidate name to sort the categories by that candidate's relative impact.</p>
+                            <p class="card__comment">All numbers in one table. Within each category, the lowest value is tinted green and the highest red; the percentage is relative to the reference (<span x-text="referenceLabel()"></span>). Click a candidate name to sort the categories by that candidate's relative impact; click its &times; to hide the column and compare the remaining candidates side by side (colours and counts then only consider the visible columns). To keep only a few, hide all columns, then click the candidates to show again.</p>
                             <div class="compare-empty" x-show="active().length < 1">Load at least one candidate to fill this table.</div>
-                            <div class="compare-heat" x-show="active().length">
+                            <div class="compare-hidden" x-show="active().length >= 2">
+                                <button type="button" class="compare-link-button" x-show="heatCandidates().length" @click="hideAllColumns('heatHidden')">Hide all columns</button>
+                                <span class="compare-hidden__label" x-show="hiddenCands('heatHidden').length">Hidden columns:</span>
+                                <template x-for="c in hiddenCands('heatHidden')" :key="c.id">
+                                    <button type="button" class="compare-hidden__chip" :title="'Show ' + c.name + ' again'" @click="showColumn('heatHidden', c)"><span class="compare-context__dot" :style="'background:' + c.color"></span><span x-text="c.name"></span><span class="compare-hidden__plus">+</span></button>
+                                </template>
+                                <button type="button" class="compare-link-button" x-show="hiddenCands('heatHidden').length > 1" @click="showAllColumns('heatHidden')">Show all</button>
+                            </div>
+                            <div class="compare-empty" x-show="active().length && !heatCandidates().length">All columns are hidden. Click the candidates above to show the ones you want to compare.</div>
+                            <div class="compare-heat" x-show="heatCandidates().length">
                                 <table class="compare-heat__table">
                                     <thead>
                                         <tr>
                                             <th class="compare-heat__head compare-heat__head--label">Impact category</th>
-                                            <template x-for="c in active()" :key="c.id">
-                                                <th class="compare-heat__head compare-heat__head--cand" :class="{'compare-heat__head--sorted': heatSort === c.id}" @click="sortBy(c)"><span class="compare-context__dot" :style="'background:' + c.color"></span> <span x-text="c.name"></span></th>
+                                            <template x-for="c in heatCandidates()" :key="c.id">
+                                                <th class="compare-heat__head compare-heat__head--cand" :class="{'compare-heat__head--sorted': heatSort === c.id}" @click="sortBy(c)"><span class="compare-context__dot" :style="'background:' + c.color"></span> <span x-text="c.name"></span><button type="button" class="compare-heat__hide" x-show="heatCandidates().length > 1" :title="'Hide ' + c.name" :aria-label="'Hide ' + c.name" @click.stop="hideColumn('heatHidden', c)">&times;</button></th>
                                             </template>
                                         </tr>
                                     </thead>
@@ -1109,7 +1157,7 @@
                                             <tr>
                                                 <td class="compare-heat__cell compare-heat__cell--label"
                                                     :class="row.type === 'group' ? ('compare-heat__cell--group' + (row.level === 'endpoint' ? ' compare-heat__cell--group-end' : '')) : ''"
-                                                    :colspan="row.type === 'group' ? active().length + 1 : 1"><span x-text="row.label"></span> <span class="compare-heat__unit" x-text="row.unit || ''"></span></td>
+                                                    :colspan="row.type === 'group' ? heatCandidates().length + 1 : 1"><span x-text="row.label"></span> <span class="compare-heat__unit" x-text="row.unit || ''"></span></td>
                                                 <template x-for="(cell, i) in row.cells" :key="i">
                                                     <td class="compare-heat__cell compare-heat__cell--value" :style="'background:' + heatColor(cell.t)" :class="{'compare-heat__cell--best': cell.best}">
                                                         <span x-text="fmtSci(cell.v)"></span><span class="compare-heat__rel" x-show="cell.rel !== null" x-text="'(' + fmtPct(cell.rel, 0) + ')'"></span>
@@ -1117,20 +1165,20 @@
                                                 </template>
                                             </tr>
                                         </template>
-                                        <tr x-show="active().length >= 2 && summaryWins().counted">
-                                            <td class="compare-heat__cell compare-heat__cell--label compare-heat__cell--summary">Lowest in … of <span x-text="summaryWins().counted"></span> midpoint categories</td>
-                                            <template x-for="c in active()" :key="c.id"><td class="compare-heat__cell compare-heat__cell--summary" x-text="summaryWins().wins[c.id]"></td></template>
+                                        <tr x-show="heatCandidates().length >= 2 && summaryWins(heatCandidates()).counted">
+                                            <td class="compare-heat__cell compare-heat__cell--label compare-heat__cell--summary">Lowest in … of <span x-text="summaryWins(heatCandidates()).counted"></span> midpoint categories</td>
+                                            <template x-for="c in heatCandidates()" :key="c.id"><td class="compare-heat__cell compare-heat__cell--summary" x-text="summaryWins(heatCandidates()).wins[c.id]"></td></template>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="compare-legend-scale" x-show="active().length >= 2"><span>lowest</span><span class="compare-legend-scale__bar"></span><span>highest (within each category)</span></div>
+                            <div class="compare-legend-scale" x-show="heatCandidates().length >= 2"><span>lowest</span><span class="compare-legend-scale__bar"></span><span>highest (within each category)</span></div>
                         </div>
 
                         <!-- ===== VIEW E: STACKED ===== -->
                         <div class="card card--compare" x-show="view === 'stacked'">
                             <h2 class="card__title">Stacked contributions</h2>
-                            <p class="card__comment">Why a candidate scores the way it does: for the chosen category, each bar is split into the contributions of its materials, processes and end-of-life routes (absolute value = total × share from OPLA's chart data). Candidates without a breakdown file appear as a single grey bar.</p>
+                            <p class="card__comment">Why a candidate scores the way it does: for the chosen category, each bar is split into the contributions of its materials, processes and end-of-life routes (absolute value = total × share from OPLA's chart data). Candidates without a breakdown file appear as a single grey bar. Click &times; next to a candidate in the table to hide it from both the chart and the table; to keep only a few, hide all, then click the candidates to show again.</p>
                             <div class="compare-controls">
                                 <label class="compare-controls__label">Category:
                                     <select class="compare-controls__select" x-model="stackCategory" data-sync="stackCategory" @change="afterChange()">
@@ -1144,15 +1192,24 @@
                                 <span class="compare-seg"><button class="compare-seg__button" :class="{'compare-seg__button--active': stackMode === 'absolute'}" @click="stackMode = 'absolute'; afterChange()">Absolute</button><button class="compare-seg__button" :class="{'compare-seg__button--active': stackMode === 'percent'}" @click="stackMode = 'percent'; afterChange()">100% stacked</button></span>
                             </div>
                             <div class="compare-empty" x-show="active().length < 1">Load at least one candidate (with its breakdown data) to draw this chart.</div>
-                            <div class="compare-chart"><div id="chart-stacked"></div></div>
+                            <div class="compare-hidden" x-show="active().length >= 2">
+                                <button type="button" class="compare-link-button" x-show="stackCandidates().length" @click="hideAllColumns('stackHidden')">Hide all candidates</button>
+                                <span class="compare-hidden__label" x-show="hiddenCands('stackHidden').length">Hidden candidates:</span>
+                                <template x-for="c in hiddenCands('stackHidden')" :key="c.id">
+                                    <button type="button" class="compare-hidden__chip" :title="'Show ' + c.name + ' again'" @click="showColumn('stackHidden', c)"><span class="compare-context__dot" :style="'background:' + c.color"></span><span x-text="c.name"></span><span class="compare-hidden__plus">+</span></button>
+                                </template>
+                                <button type="button" class="compare-link-button" x-show="hiddenCands('stackHidden').length > 1" @click="showAllColumns('stackHidden')">Show all</button>
+                            </div>
+                            <div class="compare-empty" x-show="active().length && !stackCandidates().length">All candidates are hidden. Click the candidates above to show the ones you want to compare.</div>
+                            <div class="compare-chart compare-chart--scrollable"><div id="chart-stacked"></div></div>
 
                             <template x-if="stackedTable() && stackedTable().names.length">
-                                <div class="compare-heat compare-heat--spaced">
+                                <div class="compare-heat compare-heat--spaced compare-heat--scrollable">
                                     <table class="compare-heat__table">
                                         <thead>
                                             <tr>
                                                 <th class="compare-heat__head compare-heat__head--label">Contributor</th>
-                                                <template x-for="r in stackedTable().rows" :key="r.cand.id"><th class="compare-heat__head"><span class="compare-context__dot" :style="'background:' + r.cand.color"></span> <span x-text="r.cand.name"></span></th></template>
+                                                <template x-for="r in stackedTable().rows" :key="r.cand.id"><th class="compare-heat__head"><span class="compare-context__dot" :style="'background:' + r.cand.color"></span> <span x-text="r.cand.name"></span><button type="button" class="compare-heat__hide" x-show="stackCandidates().length > 1" :title="'Hide ' + r.cand.name" :aria-label="'Hide ' + r.cand.name" @click="hideColumn('stackHidden', r.cand)">&times;</button></th></template>
                                             </tr>
                                         </thead>
                                         <tbody>
